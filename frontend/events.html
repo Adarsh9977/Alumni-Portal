@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Events | JECAA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header class="jec-header">
+        <div class="jec-header-top">
+            <div class="jec-container">
+                <a href="/dashboard" class="jec-brand">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/2/2e/Jabalpur_Engineering_College_Logo.png" alt="JEC Logo" class="jec-logo-img" onerror="this.src='https://via.placeholder.com/50?text=JEC'">
+                    <div class="jec-brand-text">
+                        <span class="jec-inst-name">Jabalpur Engineering College</span>
+                        <span class="jec-portal-name">Alumni Association (JECAA)</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <nav class="jec-main-nav">
+            <div class="jec-container" style="justify-content: flex-start;">
+                <ul class="jec-nav-list">
+                    <li><a href="/dashboard" class="jec-nav-link"><i class="fas fa-th-large"></i> Home</a></li>
+                    <li><a href="/dashboard?tab=directory" class="jec-nav-link"><i class="fas fa-users"></i> Network</a></li>
+                    <li><a href="/jobs" class="jec-nav-link"><i class="fas fa-briefcase"></i> Job Board</a></li>
+                    <li><a href="/events" class="jec-nav-link active"><i class="fas fa-calendar-alt"></i> Events</a></li>
+                    <li><a href="#" class="jec-nav-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <div class="ln-toast-container" id="toastContainer"></div>
+
+    <div class="ln-page">
+        <div class="ln-container">
+            <div class="ln-grid-2">
+                <main>
+                    <div class="jec-card">
+                        <div class="jec-card-header">
+                            <span><i class="fas fa-calendar-alt"></i> Campus Events Schedule</span>
+                            <button id="postEventBtn" class="jec-btn-primary jec-btn-sm" style="display:none;" onclick="toggleForm()">Create Event</button>
+                        </div>
+                        <div id="eventsContainer">
+                            <div class="jec-loading-state"><i class="fas fa-spinner fa-spin"></i> Loading schedule...</div>
+                        </div>
+                    </div>
+
+                    <!-- Create Event Form -->
+                    <div class="jec-card" id="eventForm" style="display:none; padding:20px;">
+                        <h3 style="color:var(--jec-maroon); margin-bottom:15px;">Schedule a New Event</h3>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                            <input class="jec-modal-input" id="evTitle" placeholder="Event Name">
+                            <input class="jec-modal-input" id="evDate" type="date">
+                            <input class="jec-modal-input" id="evTime" type="time">
+                            <input class="jec-modal-input" id="evLoc" placeholder="Venue / Online Link">
+                            <select class="jec-modal-input" id="evType">
+                                <option>Meetup</option>
+                                <option>Workshop</option>
+                                <option>Webinar</option>
+                                <option>Seminar</option>
+                            </select>
+                        </div>
+                        <textarea class="jec-modal-textarea" id="evDesc" placeholder="Agenda & Overview" rows="4" style="margin-top:10px;"></textarea>
+                        <div style="margin-top:15px;">
+                            <button class="jec-btn-primary" onclick="submitEvent()">Publish Event</button>
+                            <button class="ln-btn-ghost" onclick="toggleForm()">Cancel</button>
+                        </div>
+                    </div>
+                </main>
+
+                <aside>
+                    <div class="jec-card" style="padding:24px; background:var(--jec-maroon); color:white;">
+                        <h3 style="font-family:'Outfit',sans-serif; margin-bottom:12px;"><i class="fas fa-bullhorn" style="color:var(--jec-gold);"></i> JEC Notice</h3>
+                        <p style="font-size:0.85rem; opacity:0.9;">All event links are authenticated for Jabalpur Engineering College alumni only. Verified credentials required for entry.</p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API=window.location.origin,token=localStorage.getItem('token'),user=JSON.parse(localStorage.getItem('user')||'null');
+        if(!token||!user)location.href='/login';
+
+        function H(){return{'Content-Type':'application/json','Authorization':`Bearer ${token}`}}
+        function toast(m){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`ln-toast`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),3000)}
+
+        async function loadEvents(){
+            try {
+                const r=await fetch(`${API}/api/events/`,{headers:H()});
+                const events=await r.json();
+                const c=document.getElementById('eventsContainer');
+                if(!events.length){ c.innerHTML='<div class="jec-loading-state">No events scheduled.</div>'; return; }
+                c.innerHTML=events.map(e=>`
+                    <div class="ln-event">
+                        <div class="ln-event-date">
+                            ${new Date(e.date).getDate() || e.date.split('-')[2]}
+                            <span>${new Date(e.date).toLocaleString('default', { month: 'short' }).toUpperCase() || 'MAY'}</span>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700; font-size:1.1rem; color:var(--jec-maroon);">${e.title}</div>
+                            <div style="font-weight:600; font-size:0.9rem;">${e.event_type} · ${e.location}</div>
+                            <p style="font-size:0.85rem; color:#666; margin-top:5px; line-height:1.4;">${e.description.substring(0, 150)}...</p>
+                            <div style="margin-top:15px; display:flex; gap:10px;">
+                                <button class="jec-btn-primary jec-btn-sm" onclick="toast('Joined! Details sent to your institutional email.')">Join Event</button>
+                                ${(e.organized_by===user.id||user.role==='admin')?`<button class="ln-btn-ghost" onclick="delEvent(${e.id})"><i class="fas fa-trash"></i></button>`:''}
+                            </div>
+                        </div>
+                    </div>`).join('');
+            } catch(e) { toast('Error loading records'); }
+        }
+
+        async function submitEvent(){
+            const data={title:document.getElementById('evTitle').value,description:document.getElementById('evDesc').value,date:document.getElementById('evDate').value,time:document.getElementById('evTime').value,location:document.getElementById('evLoc').value,event_type:document.getElementById('evType').value};
+            const r=await fetch(`${API}/api/events/`,{method:'POST',headers:H(),body:JSON.stringify(data)});
+            if(r.ok){toast('Event successfully published!');toggleForm();loadEvents();}
+        }
+
+        async function delEvent(id){ if(confirm('Delete?')){await fetch(`${API}/api/events/${id}`,{method:'DELETE',headers:H()});loadEvents();} }
+        function toggleForm(){ const f=document.getElementById('eventForm'); f.style.display=f.style.display==='none'?'block':'none'; }
+
+        if(user.role!=='student') document.getElementById('postEventBtn').style.display='block';
+        document.getElementById('logoutBtn').onclick=()=>{localStorage.clear();location.href='/login';};
+        loadEvents();
+    </script>
+</body>
+</html>

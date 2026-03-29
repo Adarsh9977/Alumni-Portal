@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | JECAA Career Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --jec-maroon: #800000;
+            --jec-maroon-dark: #600000;
+            --jec-gold: #d4af37;
+            --li-bg: #f3f2ef;
+        }
+        * { margin:0; padding:0; box-sizing:border-box }
+        body { font-family:'Inter', sans-serif; background:var(--li-bg); color:#191919; min-height:100vh; display:flex; flex-direction:column }
+        
+        .jec-header { background: #fff; padding: 12px 0; border-bottom: 2px solid var(--jec-maroon); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .jec-container { max-width: 1128px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; }
+        .jec-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .jec-logo-img { height: 45px; }
+        .jec-brand-text { display: flex; flex-direction: column; }
+        .jec-inst-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; color: var(--jec-maroon); text-transform: uppercase; }
+        .jec-portal-name { font-size: 0.75rem; color: #666; font-weight: 500; }
+
+        .main { flex:1; display:flex; align-items:center; justify-content:center; padding:40px 24px }
+        .login-wrap { display:grid; grid-template-columns: 1.2fr 1fr; max-width:1100px; width:100%; gap:80px; align-items:center }
+        
+        .login-text h1 { font-family: 'Outfit', sans-serif; font-size: 3rem; font-weight: 700; color: #222; line-height: 1.1; margin-bottom: 24px }
+        .login-text h1 span { color: var(--jec-maroon) }
+        .login-text p { color: #555; font-size: 1.2rem; line-height: 1.6 }
+        
+        .login-card { background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.08); padding:40px; width:100%; max-width:450px }
+        .login-card h2 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: var(--jec-maroon) }
+        .login-card .sub { color: #666; font-size: 0.95rem; margin-bottom: 30px }
+        
+        .field { margin-bottom: 20px }
+        .field label { display:block; font-weight:600; font-size:.85rem; color:#444; margin-bottom:8px }
+        .field input { width:100%; padding:14px; border:1px solid #ddd; border-radius:8px; font-size:1rem; outline:none; transition:all 0.2s }
+        .field input:focus { border-color:var(--jec-maroon); box-shadow:0 0 0 3px rgba(128,0,0,0.1) }
+        
+        .btn-login { width:100%; padding:16px; background:var(--jec-maroon); color:#fff; border:none; border-radius:30px; font-size:1rem; font-weight:700; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px }
+        .btn-login:hover { background:var(--jec-maroon-dark); transform: translateY(-1px) }
+        
+        .divider { display:flex; align-items:center; gap:16px; margin:25px 0; color:#888; font-size:.85rem }
+        .divider::before, .divider::after { content:''; flex:1; height:1px; background:#eee }
+        
+        .register-link { text-align:center; font-size:1rem; color:#444 }
+        .register-link a { color:var(--jec-maroon); font-weight:700; text-decoration:none }
+        .register-link a:hover { text-decoration:underline }
+        
+        .alert { padding:14px; border-radius:8px; font-size:.9rem; margin-bottom:20px; display:none; border-left: 4px solid transparent }
+        .alert-error { background:#fff0f0; color:#c00; border-color:#c00 }
+        .alert-success { background:#f0fff4; color:#080; border-color:#080 }
+
+        @media(max-width:900px) {
+            .login-wrap { grid-template-columns: 1fr; gap: 40px }
+            .login-text { text-align: center }
+            .login-text h1 { font-size: 2.2rem }
+            .login-card { margin: 0 auto }
+        }
+    </style>
+</head>
+<body>
+    <header class="jec-header">
+        <div class="jec-container">
+            <a href="/" class="jec-brand">
+                <img src="https://upload.wikimedia.org/wikipedia/en/2/2e/Jabalpur_Engineering_College_Logo.png" alt="JEC Logo" class="jec-logo-img" onerror="this.src='https://via.placeholder.com/50?text=JEC'">
+                <div class="jec-brand-text">
+                    <span class="jec-inst-name">Jabalpur Engineering College</span>
+                    <span class="jec-portal-name">Alumni Association (JECAA)</span>
+                </div>
+            </a>
+        </div>
+    </header>
+
+    <div class="main">
+        <div class="login-wrap">
+            <div class="login-text">
+                <h1>Welcome to your <span>Professional Community</span></h1>
+                <p>Join thousands of JEC graduates. Find jobs, news, and stay connected with your alma mater.</p>
+            </div>
+            <div class="login-card">
+                <h2>Sign in</h2>
+                <p class="sub">Access the JEC Career Portal</p>
+                <div id="alertBox" class="alert"></div>
+                <form id="loginForm">
+                    <div class="field">
+                        <label>Campus Email / Alumni ID</label>
+                        <input type="email" id="email" placeholder="you@alumni.com" required>
+                    </div>
+                    <div class="field">
+                        <label>Security Password</label>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-login" id="loginBtn">Authorize Access</button>
+                </form>
+                <div class="divider">or secure access via</div>
+                <p class="register-link">New to the Alumni Portal? <a href="/register">Create Account</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = window.location.origin;
+        function showAlert(msg, type='error') {
+            const el = document.getElementById('alertBox');
+            el.className = `alert alert-${type}`;
+            el.innerHTML = `<i class="fas fa-${type==='error'?'exclamation-circle':'check-circle'}"></i> ${msg}`;
+            el.style.display = 'block';
+        }
+        document.getElementById('loginForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            try {
+                const r = await fetch(`${API}/api/login`, { 
+                    method:'POST', 
+                    headers:{'Content-Type':'application/json'}, 
+                    body:JSON.stringify({ email:document.getElementById('email').value, password:document.getElementById('password').value })
+                });
+                const d = await r.json();
+                if (r.ok) { 
+                    localStorage.setItem('token', d.access_token); 
+                    localStorage.setItem('user', JSON.stringify(d.user)); 
+                    showAlert('Access Granted! Redirecting...','success'); 
+                    setTimeout(()=>location.href='/dashboard', 800); 
+                }
+                else { showAlert(d.detail||'Unauthorized access or invalid credentials'); btn.disabled=false; btn.innerHTML='Authorize Access'; }
+            } catch(e) { showAlert('Network error - server unreachable'); btn.disabled=false; btn.innerHTML='Authorize Access'; }
+        });
+        if (localStorage.getItem('token')) location.href='/dashboard';
+    </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JECAA Career Hub | Official Alumni Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --jec-maroon: #800000;
+            --jec-maroon-dark: #600000;
+            --jec-maroon-light: #fff0f0;
+            --jec-gold: #d4af37;
+            --li-bg: #f3f2ef;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter', sans-serif; background:#fff; color:#191919; -webkit-font-smoothing:antialiased}
+        
+        /* Nav */
+        .nav{background:#fff; border-bottom:2px solid var(--jec-maroon); padding:12px 0; position:sticky; top:0; z-index:100}
+        .nav .wrap{max-width:1128px; margin:0 auto; padding:0 24px; display:flex; align-items:center; justify-content:space-between}
+        .logo { display:flex; align-items:center; gap:12px; text-decoration:none; }
+        .logo img { height: 45px; }
+        .logo-text { display:flex; flex-direction:column; }
+        .inst-name { font-family:'Outfit', sans-serif; font-weight:700; color:var(--jec-maroon); text-transform:uppercase; font-size:1.1rem; }
+        .portal-name { font-size: 0.8rem; color:#666; font-weight:500; }
+
+        .nav-links{display:flex; gap:12px; align-items:center}
+        .nav-links a{text-decoration:none; color:#444; font-weight:600; font-size:.9rem; padding:8px 16px; border-radius:24px; transition:all .15s}
+        .btn-join{background:var(--jec-maroon)!important; color:#fff!important; display:inline-block; padding:10px 24px!important; border-radius:30px!important;}
+        
+        /* Hero */
+        .hero{max-width:1128px; margin:0 auto; padding:80px 24px; display:grid; grid-template-columns:1.2fr 1fr; gap:60px; align-items:center; min-height:80vh}
+        .hero-text h1{font-family:'Outfit', sans-serif; font-size:3.5rem; font-weight:700; color:#1a1a1a; line-height:1.1; margin-bottom:24px}
+        .hero-text h1 span{color:var(--jec-maroon)}
+        .hero-text p{font-size:1.2rem; color:#555; line-height:1.6; margin-bottom:40px; max-width:500px}
+        .hero-actions{display:flex; gap:16px}
+        .btn{display:inline-flex; align-items:center; gap:10px; padding:16px 32px; border-radius:32px; font-size:1rem; font-weight:700; text-decoration:none; transition:0.2s}
+        .btn-fill{background:var(--jec-maroon); color:#fff}
+        .btn-fill:hover{background:var(--jec-maroon-dark); transform:translateY(-2px)}
+        .btn-out{border:2px solid var(--jec-maroon); color:var(--jec-maroon)}
+        
+        .hero-visual img{width:100%; border-radius:20px; box-shadow:0 20px 40px rgba(0,0,0,0.1); border:4px solid #fff}
+
+        /* Features */
+        .features{background:var(--li-bg); padding:100px 24px}
+        .feat-wrap{max-width:1128px; margin:0 auto}
+        .feat-header{text-align:center; margin-bottom:60px}
+        .feat-header h2{font-family:'Outfit', sans-serif; font-size:2.5rem; color:var(--jec-maroon)}
+        .feat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:30px}
+        .feat-card{background:#fff; padding:40px 30px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.05); transition:0.3s}
+        .feat-card:hover{transform:translateY(-10px); box-shadow:0 12px 24px rgba(0,0,0,0.1)}
+        .feat-icon{width:60px; height:60px; background:var(--jec-maroon-light); color:var(--jec-maroon); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin-bottom:20px}
+        .feat-card h3{font-family:'Outfit', sans-serif; margin-bottom:12px; font-size:1.3rem}
+        .feat-card p{color:#666; font-size:0.95rem; line-height:1.6}
+
+        /* Footer */
+        .footer{background:var(--jec-maroon); color:white; padding:60px 24px; text-align:center}
+        .footer-logo{font-family:'Outfit', sans-serif; font-size:1.8rem; font-weight:700; color:var(--jec-gold); margin-bottom:20px}
+        .footer p{opacity:0.8; font-size:0.9rem}
+
+        @media(max-width:900px){
+            .hero{grid-template-columns:1fr; text-align:center}
+            .hero-text h1{font-size:2.5rem}
+            .hero-actions{justify-content:center}
+            .feat-grid{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="wrap">
+            <a href="/" class="logo">
+                <img src="https://upload.wikimedia.org/wikipedia/en/2/2e/Jabalpur_Engineering_College_Logo.png" alt="JEC Logo" onerror="this.src='https://via.placeholder.com/50?text=JEC'">
+                <div class="logo-text">
+                    <span class="inst-name">Jabalpur Engineering College</span>
+                    <span class="portal-name">Alumni Association (JECAA)</span>
+                </div>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="/login">Sign In</a>
+                <a href="/register" class="btn-join">Join Portal</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-text">
+            <h1>Stay Connected to your <span>Institutional Legacy</span></h1>
+            <p>The official career and networking hub for JEC Jabalpur. Connect with global alumni, discover exclusive jobs, and mentor the next generation.</p>
+            <div class="hero-actions">
+                <a href="/register" class="btn btn-fill"><i class="fas fa-plus"></i> Get Started</a>
+                <a href="/login" class="btn btn-out">Member Access</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <img src="https://images.unsplash.com/photo-1523050335102-c89b1c7ea717?auto=format&fit=crop&w=800&q=80" alt="JEC Campus Life">
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="feat-wrap">
+            <div class="feat-header">
+                <h2>Designed for Excellence</h2>
+            </div>
+            <div class="feat-grid">
+                <div class="feat-card">
+                    <div class="feat-icon"><i class="fas fa-brain"></i></div>
+                    <h3>AI Resume Audit</h3>
+                    <p>Proprietary Career Optimizer that analyzes your resume against industry benchmarks for ATS compliance.</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon"><i class="fas fa-briefcase"></i></div>
+                    <h3>Exclusive Job Board</h3>
+                    <p>Direct hiring lines to top organizations via JEC alumni working at Google, Microsoft, Amazon, and more.</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon"><i class="fas fa-users"></i></div>
+                    <h3>Networking</h3>
+                    <p>Verified alumni directory. Connect with seniors from 1960 to present across all branches including CS, IT, EC, and more.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-logo">JECAA CAREER HUB</div>
+        <p>&copy; 2026 Jabalpur Engineering College Alumni Association. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (token && user) {
+            document.getElementById('navLinks').innerHTML = `
+                <a href="/dashboard">Portal Home</a>
+                <a href="/dashboard" class="btn-join"><i class="fas fa-user-circle"></i> ${user.name}</a>
+            `;
+        }
+    </script>
+</body>
+</html>

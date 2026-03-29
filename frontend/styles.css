@@ -1,0 +1,158 @@
+/* ===== JEC Career Hub — Official Style System (STABLE) ===== */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+    --jec-maroon: #800000;
+    --jec-maroon-dark: #600000;
+    --jec-maroon-light: #fff0f0;
+    --jec-gold: #d4af37;
+    --li-bg: #f3f2ef;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--li-bg);
+    color: #1a1a1a;
+    line-height: 1.5;
+}
+
+/* HEADER & NAV */
+.jec-header { background: #fff; width: 100%; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+.jec-header-top { padding: 12px 0; border-bottom: 2px solid var(--jec-maroon); }
+.jec-container { max-width: 1128px; margin: 0 auto; padding: 0 16px; display: flex; justify-content: space-between; align-items: center; }
+
+.jec-brand { display: flex; align-items: center; gap: 15px; text-decoration: none; }
+.jec-logo-svg { border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s; }
+.jec-logo-svg:hover { transform: scale(1.05); }
+.jec-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+.jec-inst-name { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.15rem; color: var(--jec-maroon); text-transform: uppercase; letter-spacing: -0.5px; }
+.jec-portal-name { font-size: 0.85rem; color: #555; font-weight: 600; }
+
+.jec-user-pill { display: flex; align-items: center; gap: 12px; background: #f8f8f8; padding: 6px 16px; border-radius: 30px; border: 1px solid #eee; }
+.jec-user-info { display: flex; flex-direction: column; text-align: right; }
+.jec-user-name { font-size: 0.85rem; font-weight: 700; color: #333; }
+.jec-user-role { font-size: 0.65rem; font-weight: 800; color: var(--jec-maroon); text-transform: uppercase; }
+
+.jec-main-nav { background: #fff; border-bottom: 1px solid #eee; }
+.jec-nav-list { display: flex; list-style: none; max-width: 1128px; margin: 0 auto; padding: 0 16px; }
+.jec-nav-link { 
+    display: flex; flex-direction: column; align-items: center; padding: 10px 20px; 
+    text-decoration: none; color: #666; font-weight: 600; font-size: 0.75rem; 
+    border-bottom: 3px solid transparent; transition: 0.2s;
+}
+.jec-nav-link i { font-size: 1.2rem; margin-bottom: 2px; }
+.jec-nav-link:hover, .jec-nav-link.active { color: var(--jec-maroon); border-bottom-color: var(--jec-maroon); }
+
+/* LAYOUT GRID */
+.jec-page-bg { padding: 24px 0; }
+.jec-content-wrapper { display: flex; flex-direction: column; gap: 16px; min-height: 80vh; }
+
+.ln-grid { display: grid; grid-template-columns: 225px 1fr 300px; gap: 24px; align-items: start; }
+.ln-grid-2 { display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: start; }
+
+/* TABS */
+.jec-tabs-card { background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); padding: 0 16px; margin-bottom: 16px; }
+.jec-tabs { display: flex; gap: 10px; }
+.jec-tab { 
+    background: none; border: none; padding: 16px 20px; color: #666; 
+    font-weight: 700; cursor: pointer; border-bottom: 3.5px solid transparent; 
+    font-family: inherit; font-size: 0.9rem; transition: 0.2s;
+}
+.jec-tab.active { color: var(--jec-maroon); border-bottom-color: var(--jec-maroon); }
+.jec-tab:hover:not(.active) { background: #f8f8f8; }
+
+/* CARDS */
+.jec-card { background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 16px; }
+.jec-card-header { padding: 15px 20px; border-bottom: 1px solid #eee; font-weight: 700; color: var(--jec-maroon); display: flex; justify-content: space-between; align-items: center; }
+
+/* PROFILE SIDEBAR */
+.jec-profile-card { background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); overflow: hidden; }
+.jec-profile-header { height: 50px; background: linear-gradient(to right, var(--jec-maroon), #a00000); position: relative; margin-bottom: 35px; }
+.jec-profile-avatar { 
+    width: 68px; height: 68px; border-radius: 50%; background: #fff; 
+    position: absolute; bottom: -34px; left: 50%; transform: translateX(-50%); 
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem; 
+    font-weight: 800; color: var(--jec-maroon); border: 4px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.jec-profile-body { padding: 0 16px 20px; text-align: center; }
+.jec-headline { font-size: 0.75rem; color: #777; margin-bottom: 10px; }
+.jec-stat-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.75rem; border-top: 1px solid #f0f0f0; }
+.jec-stat-label { color: #666; font-weight: 600; }
+.jec-stat-value { color: var(--jec-maroon); font-weight: 700; }
+
+/* FEED POSTS */
+.jec-post-creator { background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); margin-bottom: 16px; }
+.jec-creator-top { display: flex; gap: 12px; margin-bottom: 15px; }
+.jec-creator-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--jec-maroon-light); color: var(--jec-maroon); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.jec-creator-input { flex: 1; background: #fdfdfd; border: 1.5px solid #eee; border-radius: 35px; padding: 12px 20px; color: #888; cursor: pointer; font-weight: 500; }
+.jec-creator-tools { display: flex; justify-content: space-around; }
+.jec-tool-btn { background: none; border: none; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; color: #555; cursor: pointer; padding: 8px; border-radius: 4px; }
+.jec-tool-btn:hover { background: #f5f5f5; }
+
+/* POST ITEM */
+.jec-post { background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); margin-bottom: 12px; padding: 16px; }
+.ln-post-header { display: flex; gap: 12px; margin-bottom: 15px; }
+.ln-post-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; }
+.ln-post-info { flex: 1; }
+.ln-post-name a { text-decoration: none; color: #1a1a1a; font-weight: 700; font-size: 0.9rem; }
+.ln-post-role { font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-left: 5px; background: var(--jec-maroon-light); color: var(--jec-maroon); }
+.ln-post-body { font-size: 0.9rem; color: #333; margin: 15px 0; }
+.ln-post-actions { display: flex; border-top: 1px solid #eee; padding-top: 12px; gap: 5px; }
+.ln-post-action { flex: 1; border: none; background: none; color: #666; font-weight: 600; font-size: 0.85rem; padding: 10px; cursor: pointer; border-radius: 4px; display: flex; justify-content: center; gap: 8px; }
+.ln-post-action:hover { background: #f8f8f8; color: var(--jec-maroon); }
+
+/* DIRECTORY */
+.ln-member { display: flex; align-items: center; gap: 16px; padding: 15px; border-bottom: 1px solid #f0f0f0; }
+.ln-member-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; }
+.ln-member-info { flex: 1; }
+.ln-member-name { font-weight: 700; font-size: 0.95rem; }
+.ln-member-detail { font-size: 0.8rem; color: #666; margin-top: 2px; }
+
+/* DIRECTORY SEARCH */
+.jec-search-box { padding: 15px; background: #fff; }
+.jec-search-input-group { display: flex; align-items: center; background: #f3f2ef; border-radius: 6px; padding: 10px 15px; border: 1.5px solid #eee; margin-bottom: 10px; }
+.jec-search-input-group input { background: none; border: none; outline: none; flex: 1; font-weight: 500; }
+.jec-search-filters { display: flex; gap: 10px; }
+.jec-search-filters input { flex: 1; padding: 10px; border: 1.5px solid #eee; border-radius: 6px; font-size: 0.85rem; }
+.jec-btn-search { 
+    background: var(--jec-maroon); color: white; border: none; 
+    padding: 10px 25px; border-radius: 6px; font-weight: 700; cursor: pointer; 
+    min-width: 80px; transition: 0.2s;
+}
+
+/* BUTTONS */
+.jec-btn-primary { background: var(--jec-maroon); color: white; border: none; padding: 10px 24px; border-radius: 20px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.jec-btn-primary.jec-btn-sm { padding: 6px 16px; font-size: 0.8rem; }
+.jec-btn-primary:active { transform: scale(0.98); }
+
+/* JOBS & EVENTS */
+.ln-job, .ln-event { display: flex; gap: 16px; padding: 20px; border-bottom: 1px solid #eee; }
+.ln-job-icon, .ln-event-date { width: 48px; height: 48px; border-radius: 8px; background: var(--jec-maroon-light); color: var(--jec-maroon); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.ln-event-date { flex-direction: column; font-weight: 800; line-height: 1; }
+.ln-event-date span { font-size: 0.6rem; text-transform: uppercase; margin-top: 2px; }
+
+/* RESUME ANALYZER */
+.ai-resume-card .jec-ai-header { background: #1a1a1a; padding: 20px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+.jec-ai-title { font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.jec-ats-pill { background: var(--jec-gold); color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; }
+.jec-upload-zone { padding: 40px; text-align: center; border: 2px dashed #ddd; margin: 20px; border-radius: 12px; }
+.jec-upload-zone i { font-size: 3rem; color: #ddd; margin-bottom: 15px; display: block; }
+.jec-btn-outline { background: none; border: 2px solid var(--jec-maroon); color: var(--jec-maroon); padding: 10px 24px; border-radius: 30px; font-weight: 700; cursor: pointer; }
+
+/* MODALS */
+.ln-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; display: none; align-items: center; justify-content: center; }
+.ln-modal-overlay.active { display: flex; }
+.jec-modal { background: #fff; width: 90%; max-width: 500px; border-radius: 12px; overflow: hidden; }
+.jec-modal-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+.jec-modal-body { padding: 20px; }
+.jec-modal-input, .jec-modal-textarea { width: 100%; padding: 12px; border: 1.5px solid #eee; border-radius: 6px; margin-bottom: 15px; }
+
+/* TOAST */
+.ln-toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+.ln-toast { background: #323232; color: #fff; padding: 12px 24px; border-radius: 6px; margin-top: 10px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
+/* TABS VISIBILITY */
+.ln-tab-content { display: none; }
+.ln-tab-content.active { display: block; }

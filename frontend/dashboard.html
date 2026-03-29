@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | JECAA Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header class="jec-header">
+        <div class="jec-header-top">
+            <div class="jec-container">
+                <a href="/dashboard" class="jec-brand">
+                    <!-- High-Fidelity Official JEC SVG Logo Fallback -->
+                    <svg width="55" height="55" viewBox="0 0 100 100" class="jec-logo-svg">
+                        <circle cx="50" cy="50" r="48" fill="#800000" />
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#d4af37" stroke-width="2" />
+                        <text x="50" y="55" text-anchor="middle" fill="#d4af37" font-family="'Outfit', sans-serif" font-weight="800" font-size="24">JEC</text>
+                        <path d="M50 15 L50 85 M15 50 L85 50" stroke="#d4af37" stroke-width="1" opacity="0.3" />
+                    </svg>
+                    <div class="jec-brand-text">
+                        <span class="jec-inst-name">Jabalpur Engineering College</span>
+                        <span class="jec-portal-name">Alumni Association (JECAA)</span>
+                    </div>
+                </a>
+                <div class="jec-user-pill" id="userPill">
+                    <div class="jec-user-info">
+                        <span id="navUserName" class="jec-user-name">User Name</span>
+                        <span id="navUserRole" class="jec-user-role">...</span>
+                    </div>
+                    <div class="jec-creator-avatar" id="navAvatar" style="width:36px; height:36px; font-size:0.9rem;">U</div>
+                </div>
+            </div>
+        </div>
+        <nav class="jec-main-nav">
+            <div class="jec-container" style="justify-content: flex-start;">
+                <ul class="jec-nav-list">
+                    <li><a href="/dashboard" class="jec-nav-link active"><i class="fas fa-th-large"></i> Home</a></li>
+                    <li><a href="/dashboard?tab=directory" class="jec-nav-link"><i class="fas fa-users"></i> Network</a></li>
+                    <li><a href="/jobs" class="jec-nav-link"><i class="fas fa-briefcase"></i> Job Board</a></li>
+                    <li><a href="/events" class="jec-nav-link"><i class="fas fa-calendar-alt"></i> Events</a></li>
+                    <li><a href="#" class="jec-nav-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <div class="ln-toast-container" id="toastContainer"></div>
+
+    <div class="jec-page-bg">
+        <div class="ln-container">
+            <div class="ln-grid">
+                
+                <!-- LEFT SIDEBAR -->
+                <aside class="ln-sidebar">
+                    <div class="jec-profile-card">
+                        <div class="jec-profile-header">
+                            <div class="jec-profile-avatar" id="sideAvatar">?</div>
+                        </div>
+                        <div class="jec-profile-body">
+                            <h2 id="sideName" style="font-family:'Outfit',sans-serif; font-size:1.1rem; margin-bottom:2px;">User Name</h2>
+                            <p id="sideHeadline" class="jec-headline">Community Member</p>
+                            <div class="jec-stat-row"><span class="jec-stat-label">Role</span><span class="jec-stat-value" id="sideRole">...</span></div>
+                            <div class="jec-stat-row"><span class="jec-stat-label">Batch</span><span class="jec-stat-value" id="sideBatch">...</span></div>
+                            <div class="jec-stat-row"><span class="jec-stat-label">Connections</span><span class="jec-stat-value" id="sideConnections">0</span></div>
+                        </div>
+                    </div>
+
+                    <div class="jec-card" style="margin-top:16px;">
+                        <div class="jec-card-header" style="font-size:0.85rem; padding:12px 16px;">Quick Access</div>
+                        <div style="padding: 10px 0;">
+                            <a href="/jobs" style="display:block; padding:10px 20px; text-decoration:none; color:#444; font-size:0.9rem; font-weight:600;"><i class="fas fa-briefcase" style="margin-right:10px; color:var(--jec-maroon);"></i> Browse Jobs</a>
+                            <a href="/events" style="display:block; padding:10px 20px; text-decoration:none; color:#444; font-size:0.9rem; font-weight:600;"><i class="fas fa-calendar" style="margin-right:10px; color:var(--jec-maroon);"></i> Events</a>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- MAIN CONTENT -->
+                <main class="ln-main-content">
+                    
+                    <!-- TAB SELECTOR (Top of Feed) -->
+                    <div class="jec-tabs-card">
+                        <div class="jec-tabs">
+                            <button class="jec-tab active" onclick="showTab('feed')" id="tabFeed"><i class="fas fa-newspaper"></i> Feed</button>
+                            <button class="jec-tab" onclick="showTab('directory')" id="tabDirectory"><i class="fas fa-address-book"></i> Alumni</button>
+                            <button class="jec-tab" onclick="showTab('profile')" id="tabProfile"><i class="fas fa-user-circle"></i> Profile</button>
+                            <button class="jec-tab" onclick="showTab('applications')" id="tabApplications" style="display:none"><i class="fas fa-clipboard-list"></i> Apps</button>
+                            <button class="jec-tab" onclick="showTab('admin')" id="tabAdmin" style="display:none"><i class="fas fa-user-shield"></i> Admin</button>
+                        </div>
+                    </div>
+
+                    <!-- FEED TAB -->
+                    <div class="ln-tab-content active" id="contentFeed">
+                        <div class="jec-post-creator">
+                            <div class="jec-creator-top">
+                                <div class="jec-creator-avatar" id="postAvatar">U</div>
+                                <div class="jec-creator-input" onclick="document.getElementById('postModal').classList.add('active')">
+                                    Start a conversation with the JEC community...
+                                </div>
+                            </div>
+                            <div style="padding:10px 15px; border-top:1px solid #eee; display:flex; align-items:center; color:#888; font-size:0.85rem;">
+                                <i class="fas fa-info-circle" style="margin-right:8px;"></i> Narrate your professional journey with the JEC network.
+                            </div>
+                        </div>
+                        <div id="postsContainer"><div class="jec-loading-state"><i class="fas fa-spinner fa-spin"></i> Loading Feed...</div></div>
+                    </div>
+
+                    <!-- DIRECTORY TAB -->
+                    <div class="ln-tab-content" id="contentDirectory">
+                        <div class="jec-card">
+                            <div class="jec-card-header">JEC Global Alumni Network</div>
+                            <div class="jec-search-box">
+                                <div class="jec-search-input-group">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="searchName" placeholder="Search by name, skills, or keywords...">
+                                </div>
+                                <div class="jec-search-filters">
+                                    <input type="text" id="searchBatch" placeholder="Batch (e.g. 2020)">
+                                    <input type="text" id="searchCompany" placeholder="Organization">
+                                    <button class="jec-btn-search" onclick="loadDirectory()">Search</button>
+                                </div>
+                            </div>
+                            <div id="directoryContainer"></div>
+                        </div>
+                    </div>
+
+                    <!-- PROFILE TAB -->
+                    <div class="ln-tab-content" id="contentProfile">
+                        <div class="jec-card" style="padding:30px;">
+                        <h2 style="font-family:'Outfit',sans-serif; color:var(--jec-maroon); margin-bottom:25px;">Institutional Profile</h2>
+                        
+                        <!-- Profile Pic Section -->
+                        <div style="display:flex; align-items:center; gap:25px; margin-bottom:30px; padding-bottom:30px; border-bottom:1px solid #eee;">
+                            <div class="jec-creator-avatar" id="profileAvatarPreview" style="width:100px; height:100px; font-size:2rem; font-weight:800;">U</div>
+                            <div>
+                                <h3 style="font-size:1.1rem; margin-bottom:8px;">Digital Identity Photo</h3>
+                                <div style="display:flex; gap:10px;">
+                                    <button class="jec-btn-primary jec-btn-sm" onclick="document.getElementById('picInput').click()">Update Photo</button>
+                                    <button class="ln-btn-ghost jec-btn-sm" onclick="removeProfilePic()" style="color:var(--jec-maroon);">Remove</button>
+                                    <input type="file" id="picInput" style="display:none;" accept="image/*" onchange="uploadProfilePic()">
+                                </div>
+                                <p style="font-size:0.75rem; color:#888; margin-top:8px;">JPG, PNG or GIF. Max size 2MB.</p>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                                <div class="field"><label style="display:block; font-size:0.8rem; font-weight:700; color:#555; margin-bottom:5px;">Full Name</label><input type="text" id="profileName" class="jec-modal-input" style="margin-bottom:0;"></div>
+                                <div class="field"><label style="display:block; font-size:0.8rem; font-weight:700; color:#555; margin-bottom:5px;">Batch</label><input type="text" id="profileBatch" class="jec-modal-input" style="margin-bottom:0;"></div>
+                                <div class="field"><label style="display:block; font-size:0.8rem; font-weight:700; color:#555; margin-bottom:5px;">Branch</label><input type="text" id="profileBranch" class="jec-modal-input" style="margin-bottom:0;"></div>
+                                <div class="field"><label style="display:block; font-size:0.8rem; font-weight:700; color:#555; margin-bottom:5px;">Current Organization</label><input type="text" id="profileCompany" class="jec-modal-input" style="margin-bottom:0;"></div>
+                                <div class="field" style="grid-column: 1/-1;"><label style="display:block; font-size:0.8rem; font-weight:700; color:#555; margin-bottom:5px;">Professional Bio</label><textarea id="profileBio" class="jec-modal-textarea" rows="3" style="margin-bottom:0;"></textarea></div>
+                                <div style="grid-column: 1/-1; text-align:right;"><button class="jec-btn-primary" onclick="updateProfile()">Save Identity</button></div>
+                            </div>
+                        </div>
+
+                        <!-- AI ANALYZER -->
+                        <div class="jec-card ai-resume-card">
+                            <div class="jec-ai-header">
+                                <div class="jec-ai-title"><i class="fas fa-brain" style="color:var(--jec-gold);"></i> AI Career Audit</div>
+                                <div id="atsScoreBadge" class="jec-ats-pill" style="display:none;">Score: <span id="atsScoreValue">0</span>%</div>
+                            </div>
+                            <div id="resumePrompt" class="jec-upload-zone">
+                                <i class="fas fa-file-pdf"></i>
+                                <p style="font-weight:600; color:#666;">Upload your Professional CV for an instant AI evaluation.</p>
+                                <input type="file" id="resumeFile" accept=".pdf" style="display:none" onchange="uploadResume()">
+                                <button class="jec-btn-outline" onclick="document.getElementById('resumeFile').click()">Analyze Resume</button>
+                            </div>
+                            <div id="resumeAnalysis" style="display:none; padding:20px; background:#fafafa; border-top:1px solid #eee;">
+                                <div style="font-size:0.85rem; color:#444; line-height:1.6;" id="atsFeedback"></div>
+                                <div style="margin-top:15px;"><button class="jec-btn-primary jec-btn-sm" onclick="document.getElementById('resumeFile').click()">Retry Analysis</button></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- APPLICATIONS -->
+                    <div class="ln-tab-content" id="contentApplications">
+                        <div class="jec-card"><div class="jec-card-header">Target Opportunities</div><div id="applicationsContainer"></div></div>
+                    </div>
+                </main>
+
+                <!-- RIGHT SIDEBAR -->
+                <aside class="ln-aside">
+                    <div class="jec-card"><div class="jec-card-header" style="font-size:0.85rem; padding:12px 16px;">Community Connections</div><div id="requestsContainer" style="padding:0 16px 16px;"></div></div>
+                    <div class="jec-card" style="margin-top:16px; background:var(--jec-maroon); color:#fff; padding:20px;">
+                        <h4 style="font-family:'Outfit',sans-serif; margin-bottom:10px;">JEC Notice Board</h4>
+                        <div style="font-size:0.75rem; opacity:0.9; display:grid; gap:10px;">
+                            <div><i class="fas fa-circle" style="font-size:4px; vertical-align:middle; margin-right:8px;"></i> Tech Mahindra drive on 15th Oct.</div>
+                            <div><i class="fas fa-circle" style="font-size:4px; vertical-align:middle; margin-right:8px;"></i> New research lab opened in IT dept.</div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="ln-modal-overlay" id="postModal">
+        <div class="jec-modal">
+            <div class="jec-modal-header"><h3>Create a Professional Post</h3><button class="jec-close" onclick="document.getElementById('postModal').classList.remove('active')">&times;</button></div>
+            <div class="jec-modal-body">
+                <input class="jec-modal-input" id="postTitle" placeholder="Title for your update">
+                <textarea class="jec-modal-textarea" id="postContent" placeholder="Share your experience or ask a question..." rows="5"></textarea>
+                <div style="text-align:right;"><button class="jec-btn-primary" onclick="createPost()">Broadcast Post</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div class="ln-modal-overlay" id="profileModal">
+        <div class="jec-modal">
+            <div class="jec-modal-header"><h3 id="pModalName">Alumni Profile</h3><button class="jec-close" onclick="document.getElementById('profileModal').classList.remove('active')">&times;</button></div>
+            <div class="jec-modal-body">
+                <div style="display:flex; gap:15px; align-items:center; margin-bottom:20px;">
+                    <div id="pModalAvatar" class="ln-member-avatar" style="width:64px; height:64px; font-size:1.5rem;"></div>
+                    <div>
+                        <div id="pModalRole" style="font-size:0.7rem; font-weight:800; text-transform:uppercase; color:var(--jec-maroon);"></div>
+                        <div id="pModalHeadline" style="font-weight:700; font-size:1.1rem;"></div>
+                        <div id="pModalCompany" style="font-size:0.9rem; color:#666;"></div>
+                    </div>
+                </div>
+                <div style="background:#f9f9f9; padding:15px; border-radius:8px;">
+                    <strong style="font-size:0.8rem; display:block; margin-bottom:5px; color:#555;">Career Summary</strong>
+                    <p id="pModalBio" style="font-size:0.85rem; line-height:1.5; color:#333;"></p>
+                    <hr style="margin:10px 0; border:none; border-top:1px solid #eee;">
+                    <strong style="font-size:0.8rem; display:block; margin-bottom:5px; color:#555;">Technical Expertise</strong>
+                    <p id="pModalSkills" style="font-size:0.85rem; color:var(--jec-maroon); font-weight:600;"></p>
+                </div>
+                <div style="margin-top:20px; text-align:right;"><button class="jec-btn-primary" onclick="document.getElementById('profileModal').classList.remove('active')">Close Detail</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobs Portal | JECAA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header class="jec-header">
+        <div class="jec-header-top">
+            <div class="jec-container">
+                <a href="/dashboard" class="jec-brand">
+                    <svg width="55" height="55" viewBox="0 0 100 100" class="jec-logo-svg">
+                        <circle cx="50" cy="50" r="48" fill="#800000" />
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#d4af37" stroke-width="2" />
+                        <text x="50" y="55" text-anchor="middle" fill="#d4af37" font-family="'Outfit', sans-serif" font-weight="800" font-size="24">JEC</text>
+                    </svg>
+                    <div class="jec-brand-text">
+                        <span class="jec-inst-name">Jabalpur Engineering College</span>
+                        <span class="jec-portal-name">Alumni Association (JECAA)</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <nav class="jec-main-nav">
+            <div class="jec-container" style="justify-content: flex-start;">
+                <ul class="jec-nav-list">
+                    <li><a href="/dashboard" class="jec-nav-link"><i class="fas fa-th-large"></i> Home</a></li>
+                    <li><a href="/dashboard?tab=directory" class="jec-nav-link"><i class="fas fa-users"></i> Network</a></li>
+                    <li><a href="/jobs" class="jec-nav-link active"><i class="fas fa-briefcase"></i> Job Board</a></li>
+                    <li><a href="/events" class="jec-nav-link"><i class="fas fa-calendar-alt"></i> Events</a></li>
+                    <li><a href="#" class="jec-nav-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <div class="ln-toast-container" id="toastContainer"></div>
+
+    <div class="ln-page">
+        <div class="ln-container">
+            <div class="ln-grid-2">
+                <main>
+                    <div class="jec-card">
+                        <div class="jec-card-header">
+                            <span><i class="fas fa-briefcase"></i> Active JEC Opportunity Board</span>
+                            <button id="postJobBtn" class="jec-btn-primary jec-btn-sm" style="display:none;" onclick="toggleForm()">Post Role</button>
+                        </div>
+                        <div id="jobsContainer">
+                            <div class="jec-loading-state"><i class="fas fa-spinner fa-spin"></i> Fetching career records...</div>
+                        </div>
+                    </div>
+
+                    <!-- Post Job Form Card -->
+                    <div class="jec-card" id="jobForm" style="display:none; padding:20px;">
+                        <h3 style="color:var(--jec-maroon); margin-bottom:15px;">List a New Opportunity</h3>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                            <input class="jec-modal-input" id="jobTitle" placeholder="Position Title">
+                            <input class="jec-modal-input" id="jobCompany" placeholder="Hiring Organization">
+                            <input class="jec-modal-input" id="jobLocation" placeholder="Location">
+                            <select class="jec-modal-input" id="jobType">
+                                <option>Full-time</option><option>Internship</option><option>Contract</option><option>Remote</option>
+                            </select>
+                            <input class="jec-modal-input" id="jobExp" placeholder="Exp (e.g. 2+ Years)">
+                            <input class="jec-modal-input" id="jobSkills" placeholder="Required Skills (e.g. Java, Python)">
+                            <input class="jec-modal-input" id="jobSalary" placeholder="Salary Range (Optional)">
+                        </div>
+                        <textarea class="jec-modal-textarea" id="jobDesc" placeholder="Full Job Description & Role Responsibilities..." rows="4" style="margin-top:10px;"></textarea>
+                        <div style="margin-top:15px;">
+                            <button class="jec-btn-primary" onclick="submitJob()">Publish Opportunity</button>
+                            <button class="ln-btn-ghost" onclick="toggleForm()">Cancel</button>
+                        </div>
+                    </div>
+                </main>
+
+                <aside>
+                    <div class="jec-card" style="padding:24px; background:var(--jec-maroon); color:#fff;">
+                        <h3 style="font-family:'Outfit',sans-serif; margin-bottom:12px;"><i class="fas fa-magic" style="color:var(--jec-gold);"></i> JEC MatchRank</h3>
+                        <p style="font-size:0.85rem; opacity:0.9; margin-bottom:15px;">AI identified roles at firms where our alumni are currently established.</p>
+                        <button class="jec-btn-primary jec-btn-block" style="background:var(--jec-gold); color:#000;" onclick="loadRecommendations()">
+                           View Matches
+                        </button>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <!-- Apply Modal -->
+    <div class="ln-modal-overlay" id="applyModal">
+        <div class="jec-modal">
+            <div class="jec-modal-header"><h3>Opportunity Details</h3><button class="jec-close" onclick="closeApply()">&times;</button></div>
+            <div class="jec-modal-body">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                    <p id="applyJobTitle" style="font-weight:800; color:var(--jec-maroon); font-size:1.2rem;"></p>
+                    <span id="applyJobIdPill" style="padding:2px 8px; background:#eee; border-radius:4px; font-size:0.75rem; font-weight:700; color:#555;">ID: #</span>
+                </div>
+                <div id="referralHint" style="padding:10px; background:#fff0f0; border:1px solid #ffcccc; border-radius:6px; font-size:0.8rem; margin-bottom:15px; color:#800000; font-weight:600;">
+                    <i class="fas fa-info-circle"></i> Use Job ID <span id="hintJobId"></span> when asking for a referral.
+                </div>
+                <div id="jobMetaDetails" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; font-size:0.8rem; color:#666;">
+                    <div><i class="fas fa-map-marker-alt"></i> <span id="applyJobLoc"></span></div>
+                    <div><i class="fas fa-briefcase"></i> <span id="applyJobExp"></span></div>
+                    <div><i class="fas fa-code"></i> <span id="applyJobSkills"></span></div>
+                    <div><i class="fas fa-money-bill-wave"></i> <span id="applyJobSal"></span></div>
+                </div>
+                <div id="jobDetailsText" style="margin:10px 0; font-size:0.9rem; color:#333; background:#f9f9f9; padding:20px; border-radius:8px; max-height:220px; overflow-y:auto; line-height:1.6; border:1px solid #eee;"></div>
+                <div style="margin-top:10px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:#555; display:block; margin-bottom:5px;">Upload JD-Specific Resume (PDF)</label>
+                    <input type="file" class="jec-modal-input" id="appResume" accept=".pdf">
+                </div>
+                <input class="jec-modal-input" id="portfolioLink" placeholder="Portfolio or LinkedIn URL (Optional)" style="margin-top:10px;">
+                <textarea class="jec-modal-textarea" id="coverLetter" placeholder="Add a letter to the recruiter..." rows="4" style="margin:15px 0;"></textarea>
+                <input type="hidden" id="applyJobId">
+                <button class="jec-btn-primary jec-btn-block" onclick="submitApp()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API=window.location.origin,token=localStorage.getItem('token'),user=JSON.parse(localStorage.getItem('user')||'null');
+        if(!token||!user)location.href='/login';
+
+        function H(){return{'Content-Type':'application/json','Authorization':`Bearer ${token}`}}
+        function toast(m){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`ln-toast`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),3000)}
+
+        async function loadJobs(){
+            try {
+                const r = await fetch(`${API}/api/jobs/`, {headers:H()});
+                const jobs = await r.json();
+                renderJobs(jobs);
+            } catch(e) { toast('Error synchronizing with board.'); }
+        }
+
+        async function loadRecommendations() {
+            toast('AI evaluating firm connections...');
+            const r = await fetch(`${API}/api/jobs/recommendations`, {headers:H()});
+            const jobs = await r.json();
+            renderJobs(jobs, true);
+        }
+
+        let currentJobs = [];
+        function renderJobs(jobs, isRecs) {
+            currentJobs = jobs;
+            const c=document.getElementById('jobsContainer');
+            if(!jobs.length){ c.innerHTML='<div class="jec-loading-state">No listings currently tracked.</div>'; return; }
+            c.innerHTML=jobs.map(j=>`
+                <div class="ln-job" style="${isRecs?'border-left: 4px solid var(--jec-gold)':''}">
+                    <div class="ln-job-icon"><i class="fas fa-building"></i></div>
+                    <div style="flex:1;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <div style="font-weight:700; font-size:1.15rem; color:var(--jec-maroon);">${j.title}</div>
+                            <div style="font-size:0.75rem; color:#888; font-weight:700;">Job ID: #${j.id}</div>
+                        </div>
+                        <div style="font-weight:600; font-size:1rem; margin-top:4px;">${j.company} · <span style="color:#666; font-size:0.9rem;">${j.location}</span></div>
+                        <div style="display:flex; gap:12px; margin-top:8px; align-items:center;">
+                            <span style="font-size:0.8rem; color:#555; font-weight:600; background:#f0f0f0; padding:2px 8px; border-radius:4px;">${j.job_type}</span>
+                            <span style="font-size:0.8rem; color:#555; font-weight:600; background:#f0f0f0; padding:2px 8px; border-radius:4px;">${j.experience_level || 'Open'}</span>
+                            <span style="font-size:0.8rem; color:#057642; font-weight:700;"><i class="fas fa-user-tie"></i> ${j.alumni_count || 0} Alumni work here</span>
+                        </div>
+                        <div style="margin-top:18px; display:flex; gap:10px;">
+                            <button class="jec-btn-primary jec-btn-sm" onclick="openApply(${j.id})">Apply</button>
+                            ${(j.posted_by===user.id||user.role==='admin')?`<button class="ln-btn-ghost" onclick="delJob(${j.id})"><i class="fas fa-trash"></i></button>`:''}
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        function openApply(id){ 
+            const j = currentJobs.find(x => x.id === id);
+            if(!j) return;
+            document.getElementById('applyJobId').value=id; 
+            document.getElementById('applyJobTitle').textContent=j.title; 
+            document.getElementById('applyJobIdPill').textContent = `ID: #${id}`;
+            document.getElementById('hintJobId').textContent = `#${id}`;
+            document.getElementById('jobDetailsText').textContent = j.description;
+            document.getElementById('applyJobLoc').textContent = j.location || 'Not Specified';
+            document.getElementById('applyJobExp').textContent = j.experience_level || 'Open';
+            document.getElementById('applyJobSkills').textContent = j.requirements || 'Varies';
+            document.getElementById('applyJobSal').textContent = j.salary_range || 'Competitive';
+            
+            // Clear inputs for fresh start
+            document.getElementById('portfolioLink').value = '';
+            document.getElementById('coverLetter').value = '';
+            document.getElementById('appResume').value = '';
+            
+            document.getElementById('applyModal').classList.add('active'); 
+        }
+function closeApply(){ 
+            document.getElementById('portfolioLink').value = '';
+            document.getElementById('coverLetter').value = '';
+            document.getElementById('appResume').value = '';
+            document.getElementById('applyModal').classList.remove('active'); 
+        }
+        
+        async function submitApp(){
+            const fd = new FormData();
+            fd.append('job_id', document.getElementById('applyJobId').value);
+            fd.append('cover_letter', document.getElementById('coverLetter').value);
+            const resFile = document.getElementById('appResume').files[0];
+            if(resFile) fd.append('resume', resFile);
+
+            const r=await fetch(`${API}/api/jobs/apply`,{
+                method:'POST',
+                headers:{'Authorization':`Bearer ${token}`},
+                body:fd
+            });
+            if(r.ok){toast('Application & Targeted Resume Logged!');closeApply();}
+            else { const err = await r.json(); toast(err.detail || 'Application error.'); }
+        }
+
+        async function submitJob(){
+            const data={
+                title:document.getElementById('jobTitle').value,
+                company:document.getElementById('jobCompany').value,
+                description:document.getElementById('jobDesc').value,
+                location:document.getElementById('jobLocation').value||"Remote",
+                job_type:document.getElementById('jobType').value,
+                experience_level:document.getElementById('jobExp').value||"Entry Level",
+                requirements:document.getElementById('jobSkills').value,
+                salary_range:document.getElementById('jobSalary').value
+            };
+            if(!data.title||!data.company||!data.description){toast('Complete required details.'); return;}
+            const r=await fetch(`${API}/api/jobs/`,{method:'POST',headers:H(),body:JSON.stringify(data)});
+            if(r.ok){toast('Opportunity live on JEC network!');toggleForm();loadJobs();}
+        }
+
+        async function delJob(id){ if(confirm('Remove listing?')){await fetch(`${API}/api/jobs/${id}`,{method:'DELETE',headers:H()});loadJobs();} }
+        function toggleForm(){ const f=document.getElementById('jobForm'); f.style.display=f.style.display==='none'?'block':'none'; }
+
+        if(user.role!=='student') document.getElementById('postJobBtn').style.display='block';
+        document.getElementById('logoutBtn').onclick=()=>{localStorage.clear();location.href='/login';};
+        loadJobs();
+    </script>
+</body>
+</html>
