@@ -6,8 +6,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 
-from .database import engine, Base
-from .routes import auth, users, jobs, events, posts, connections, resume
+from app.database import engine, Base
+from app.routes import auth, users, jobs, events, posts, connections, resume
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
