@@ -7,10 +7,10 @@ from sqlalchemy.orm import sessionmaker
 
 # Cloud Ready Database Configuration
 # Uses PostgreSQL in production (Vercel) and SQLite for local development
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./alumni_portal.db")
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or "sqlite:////tmp/alumni_portal.db"
 
 # Fix for Heroku/Vercel Postgres URLs (postgres:// -> postgresql://)
-if DATABASE_URL.startswith("postgres://"):
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Only use check_same_thread for SQLite
