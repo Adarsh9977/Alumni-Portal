@@ -10,11 +10,12 @@ from sqlalchemy.orm import sessionmaker
 DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or "sqlite:////tmp/alumni_portal.db"
 
 # Fix for Heroku/Vercel Postgres URLs (postgres:// -> postgresql://)
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+if DATABASE_URL and (DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://")):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+pg8000://", 1)
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 
 # Only use check_same_thread for SQLite
-engine_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {"connect_timeout": 3}
 
 engine = create_engine(DATABASE_URL, connect_args=engine_args)
 

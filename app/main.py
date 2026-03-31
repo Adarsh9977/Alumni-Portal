@@ -9,8 +9,15 @@ import os
 from app.database import engine, Base
 from app.routes import auth, users, jobs, events, posts, connections, resume
 
-# Create all database tables
-Base.metadata.create_all(bind=engine)
+# Create all database tables (Skip if cloud DB to prevent cold start timeouts)
+if "sqlite" in str(engine.url):
+    Base.metadata.create_all(bind=engine)
+else:
+    try:
+        # In cloud, tables are already created. Try but fail gracefully so lambda keeps starting.
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"Warning: Database create_all failed: {e}")
 
 # Initialize FastAPI application
 app = FastAPI(

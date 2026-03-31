@@ -7,4 +7,4 @@ python-multipart
 pydantic[email-validation]
 bcrypt
 aiofiles
-psycopg2-binary
+pg8000
