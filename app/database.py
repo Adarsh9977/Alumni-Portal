@@ -15,7 +15,7 @@ if DATABASE_URL and (DATABASE_URL.startswith("postgres://") or DATABASE_URL.star
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 
 # Only use check_same_thread for SQLite
-engine_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {"connect_timeout": 3}
+engine_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 
 engine = create_engine(DATABASE_URL, connect_args=engine_args)
 
