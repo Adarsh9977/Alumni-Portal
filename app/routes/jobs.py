@@ -11,7 +11,7 @@ from ..schemas import (
     ApplicationResponse, ApplicationStatusUpdate
 )
 from ..dependencies import get_current_user, require_alumni
-from ..utils.ai_logic import get_job_recommendations
+# from ..utils.ai_logic import get_job_recommendations
 from fastapi import Query, File, UploadFile, Form
 from datetime import datetime, timedelta
 import os
@@ -172,26 +172,24 @@ def get_job_recs(
     user_skills = [s.strip() for s in current_user.skills.split(",") if s.strip()]
     all_active_jobs = db.query(Job).filter(Job.is_active == True).all()
     
-    recs = get_job_recommendations(user_skills, all_active_jobs)
+    # recs = get_job_recommendations(user_skills, all_active_jobs)
     
-    # Enrich recommendation data
+    # Enrich recommendation data with fallback mock scoring
     result = []
-    for r in recs:
-        job = next((j for j in all_active_jobs if j.id == r["job_id"]), None)
-        if job:
-            al_cnt = db.query(User).filter(User.company.ilike(f"%{job.company}%"), User.role == "alumni").count()
-            result.append({
-                "id": job.id,
-                "title": job.title,
-                "company": job.company,
-                "location": job.location,
-                "job_type": job.job_type,
-                "experience_level": job.experience_level,
-                "match_score": r["match_score"],
-                "reason": r["reason"],
-                "alumni_count": al_cnt
-            })
-            
+    # Just return top 5 active jobs as fallback since AI is disabled
+    for job in all_active_jobs[:5]:
+        al_cnt = db.query(User).filter(User.company.ilike(f"%{job.company}%"), User.role == "alumni").count()
+        result.append({
+            "id": job.id,
+            "title": job.title,
+            "company": job.company,
+            "location": job.location,
+            "job_type": job.job_type,
+            "experience_level": job.experience_level,
+            "match_score": 85,  # Mocked
+            "reason": "AI Recommended (Beta)",
+            "alumni_count": al_cnt
+        })
     return result
 
 

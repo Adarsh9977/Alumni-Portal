@@ -10,7 +10,7 @@ from ..database import get_db
 from ..models import User, Connection
 from ..schemas import UserUpdate, UserResponse
 from ..dependencies import get_current_user, require_admin
-from ..utils.ai_logic import extract_text_from_pdf, calculate_ats_score
+# from ..utils.ai_logic import extract_text_from_pdf, calculate_ats_score
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
@@ -134,29 +134,35 @@ async def upload_resume(
         f.write(content)
         
     # Extract text and analyze
-    text = extract_text_from_pdf(content)
-    analysis = calculate_ats_score(text)
+    # text = extract_text_from_pdf(content)
+    # analysis = calculate_ats_score(text)
     
-    # Update user record
+    # # Update user record
+    # current_user.resume_path = file_path
+    # current_user.resume_text = text
+    # current_user.ats_score = analysis["score"]
+    # current_user.ats_feedback = analysis["feedback"]
+    
+    # # Also update skills if found
+    # if analysis.get("skills"):
+    #     existing_skills = current_user.skills.split(",") if current_user.skills else []
+    #     new_skills = list(set([s.strip() for s in existing_skills if s.strip()] + analysis["skills"]))
+    #     current_user.skills = ", ".join(new_skills)
+    
+    # Temporarily returning mock data without AI processing
     current_user.resume_path = file_path
-    current_user.resume_text = text
-    current_user.ats_score = analysis["score"]
-    current_user.ats_feedback = analysis["feedback"]
-    
-    # Also update skills if found
-    if analysis.get("skills"):
-        existing_skills = current_user.skills.split(",") if current_user.skills else []
-        new_skills = list(set([s.strip() for s in existing_skills if s.strip()] + analysis["skills"]))
-        current_user.skills = ", ".join(new_skills)
+    current_user.resume_text = "PDF parsed (AI disabled)"
+    current_user.ats_score = 75
+    current_user.ats_feedback = "AI Review feature temporarily disabled."
     
     db.commit()
     db.refresh(current_user)
     
     return {
-        "message": "Resume uploaded and analyzed successfully",
-        "score": analysis["score"],
-        "feedback": analysis["feedback"],
-        "skills_found": analysis["skills"]
+        "message": "Resume uploaded successfully (AI Analysis Offline)",
+        "score": current_user.ats_score,
+        "feedback": current_user.ats_feedback,
+        "skills_found": []
     }
 
 
