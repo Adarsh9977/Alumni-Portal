@@ -6,4 +6,5 @@ python-multipart
 pydantic[email]
 email-validator
 aiofiles
-pg8000
+psycopg2-binary
+pypdf
