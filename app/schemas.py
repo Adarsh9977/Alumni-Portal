@@ -223,3 +223,22 @@ class ConnectionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# ==================== MESSAGE SCHEMAS ====================
+
+class MessageCreate(BaseModel):
+    """Schema for sending a message."""
+    receiver_id: int
+    content: str
+
+class MessageResponse(BaseModel):
+    """Schema for message response data."""
+    id: int
+    sender_id: int
+    receiver_id: int
+    content: str
+    is_read: bool
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

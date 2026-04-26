@@ -71,8 +71,24 @@ window.loadPosts = async function() {
                 <div class="ln-post-body">${p.title ? `<strong style="display:block;margin-bottom:8px;font-size:1.1rem;color:var(--jec-maroon);">${p.title}</strong>` : ''}${p.content}</div>
                 <div class="ln-post-actions">
                     <button class="ln-post-action" onclick="toggleLike(${p.id})"><i class="fas fa-thumbs-up"></i> ${p.like_count || ''} Like</button>
-                    <button class="ln-post-action" onclick="toast('Comments optimized correctly.')"><i class="fas fa-comment"></i> ${p.comment_count || ''} Comment</button>
+                    <button class="ln-post-action" onclick="toggleComments(${p.id})"><i class="fas fa-comment"></i> ${(p.comments && p.comments.length) || ''} Comment</button>
                     ${(p.author_id === user.id || user.role === 'admin') ? `<button class="ln-post-action" style="color:var(--jec-maroon);" onclick="deletePost(${p.id})"><i class="fas fa-trash"></i></button>` : ''}
+                </div>
+                <div id="comments-${p.id}" style="display:none; border-top:1px solid #eee; padding-top:10px; margin-top:10px;">
+                    <div style="display:flex; gap:10px; margin-bottom:15px;">
+                        <input type="text" id="comment-input-${p.id}" class="jec-input" placeholder="Add a comment..." style="flex:1;">
+                        <button class="jec-btn-primary" onclick="addComment(${p.id})">Post</button>
+                    </div>
+                    <div class="comments-list">
+                        ${(p.comments || []).map(c => `
+                            <div style="background:#f3f2ef; padding:10px; border-radius:8px; margin-bottom:10px;">
+                                <div style="font-weight:600; font-size:0.9rem;">${c.author_name} <span style="font-weight:400; font-size:0.8rem; color:#666;">${timeAgo(c.created_at)}</span>
+                                ${(c.author_id === user.id || user.role === 'admin') ? `<button onclick="deleteComment(${c.id})" style="float:right; background:none; border:none; color:#800000; cursor:pointer;"><i class="fas fa-trash"></i></button>` : ''}
+                                </div>
+                                <div style="font-size:0.95rem; margin-top:4px;">${c.content}</div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -100,7 +116,7 @@ window.loadDirectory = async function() {
                 <div class="ln-member-avatar" style="background:${a.profile_picture ? 'none' : avatarColor(a.name)}">
                     ${a.profile_picture ? `<img src="${a.profile_picture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : a.name.charAt(0).toUpperCase()}
                 </div>
-                <div class="ln-member-info" style="cursor:pointer;" onclick="viewProfile('${a.name.replace(/'/g,"\\'")}', '${a.role}', '${a.company||"JEC Alumni"}', '${a.branch||"Engineer"}', '${(a.bio||"Dedicated member of the JEC community.").replace(/'/g,"\\'").replace(/\n/g," ")}', '${(a.skills||"All-rounder").replace(/'/g,"\\'")}', '${a.profile_picture || ""}')">
+                <div class="ln-member-info" style="cursor:pointer;" onclick="viewProfile(${a.id}, '${a.name.replace(/'/g,"\\'")}', '${a.role}', '${a.company||"JEC Alumni"}', '${a.branch||"Engineer"}', '${(a.bio||"Dedicated member of the JEC community.").replace(/'/g,"\\'").replace(/\n/g," ")}', '${(a.skills||"All-rounder").replace(/'/g,"\\'")}', '${a.profile_picture || ""}')">
                     <div class="ln-member-name">${a.name}</div>
                     <div class="ln-member-detail">${a.company || 'JEC Alumni'} · ${a.branch || '—'} · Batch ${a.batch || '—'}</div>
                 </div>
@@ -112,7 +128,7 @@ window.loadDirectory = async function() {
     } catch (e) { toast('Search Engine offline.'); }
 };
 
-window.viewProfile = function(name, role, company, branch, bio, skills, pic) {
+window.viewProfile = function(id, name, role, company, branch, bio, skills, pic) {
     document.getElementById('pModalName').textContent = name;
     document.getElementById('pModalRole').textContent = role;
     document.getElementById('pModalHeadline').textContent = branch;
@@ -127,6 +143,12 @@ window.viewProfile = function(name, role, company, branch, bio, skills, pic) {
         av.textContent = name.charAt(0).toUpperCase();
         av.style.background = avatarColor(name);
     }
+    window.currentChatUserId = id;
+    window.currentChatUserName = name;
+    window.currentChatUserRole = role;
+    window.currentChatUserPic = pic || '';
+    const btn = document.getElementById('pModalMessageBtn');
+    if (btn) btn.style.display = (id !== user.id) ? 'inline-block' : 'none';
     document.getElementById('profileModal').classList.add('active');
 };
 
@@ -193,6 +215,34 @@ window.createPost = async function() {
 
 window.deletePost = async function(id) { if (confirm('Delete professional update?')) { await fetch(`${API}/api/posts/${id}`, { method: 'DELETE', headers: H() }); loadPosts(); } };
 window.toggleLike = async function(id) { await fetch(`${API}/api/posts/${id}/like`, { method: 'POST', headers: H() }); loadPosts(); };
+
+window.toggleComments = function(id) {
+    const el = document.getElementById(`comments-${id}`);
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
+
+window.addComment = async function(id) {
+    const input = document.getElementById(`comment-input-${id}`);
+    const val = input.value.trim();
+    if (!val) return;
+    try {
+        const r = await fetch(`${API}/api/posts/${id}/comment`, { method: 'POST', headers: H(), body: JSON.stringify({ content: val }) });
+        if (r.ok) {
+            toast('Comment added!');
+            await loadPosts();
+            const el = document.getElementById(`comments-${id}`);
+            if (el) el.style.display = 'block';
+        }
+    } catch (e) { toast('Error adding comment'); }
+};
+
+window.deleteComment = async function(cid) {
+    if (!confirm('Delete this comment?')) return;
+    try {
+        const r = await fetch(`${API}/api/posts/comment/${cid}`, { method: 'DELETE', headers: H() });
+        if (r.ok) { toast('Comment deleted'); loadPosts(); }
+    } catch (e) { toast('Error deleting comment'); }
+};
 window.updateProfile = async function() {
     const data = { name: document.getElementById('profileName').value, batch: document.getElementById('profileBatch').value, branch: document.getElementById('profileBranch').value, company: document.getElementById('profileCompany').value, bio: document.getElementById('profileBio').value };
     const r = await fetch(`${API}/api/users/me`, { method: 'PUT', headers: H(), body: JSON.stringify(data) });
@@ -215,4 +265,284 @@ window.removeProfilePic = async function() {
     }
 }
 
+window.currentChatUserId = null;
+window.currentChatUserName = null;
+window.currentChatUserRole = null;
+window.currentChatUserPic = null;
+window.allConversations = [];
+window.chatRefreshTimer = null;
+
+// ===== Render message bubbles (shared between inline and overlay) =====
+function renderBubbles(msgs, container) {
+    if (!msgs.length) {
+        container.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#999; text-align:center; padding:40px;">
+                <i class="fas fa-comment-dots" style="font-size:2.5rem; color:#ddd; margin-bottom:12px;"></i>
+                <p style="font-weight:600; font-size:0.95rem; color:#888;">No messages yet</p>
+                <p style="font-size:0.8rem; margin-top:4px;">Send a message to start the conversation!</p>
+            </div>`;
+        return;
+    }
+    container.innerHTML = msgs.map(m => {
+        const isSent = m.sender_id === user.id;
+        const t = m.created_at ? new Date(m.created_at) : null;
+        const timeStr = t ? t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        return `<div class="chat-bubble ${isSent ? 'sent' : 'received'}">
+            ${m.content}
+            <span class="chat-bubble-time">${timeStr}</span>
+        </div>`;
+    }).join('');
+    container.scrollTop = container.scrollHeight;
+}
+
+// ===== Load conversations list =====
+window.loadConversations = async function() {
+    try {
+        const r = await fetch(`${API}/api/messages/conversations`, { headers: H() });
+        const convs = await r.json();
+        window.allConversations = convs;
+        renderConversationsList(convs);
+    } catch (e) {
+        const c = document.getElementById('conversationsContainer');
+        if (c) c.innerHTML = `
+            <div class="chat-empty-state">
+                <i class="fas fa-users"></i>
+                <p>Connect with alumni to start chatting!</p>
+            </div>`;
+    }
+};
+
+function renderConversationsList(convs) {
+    const c = document.getElementById('conversationsContainer');
+    if (!c) return;
+    if (!convs.length) {
+        c.innerHTML = `
+            <div class="chat-empty-state">
+                <i class="fas fa-user-friends" style="font-size:2rem; color:#ddd; margin-bottom:10px;"></i>
+                <p style="font-weight:600; color:#888;">No conversations yet</p>
+                <p style="font-size:0.8rem; margin-top:4px;">Visit the Alumni directory to connect and start chatting.</p>
+            </div>`;
+        return;
+    }
+    c.innerHTML = convs.map(cv => {
+        const isActive = window.currentChatUserId === cv.user_id;
+        const preview = cv.last_message ? (cv.last_message.length > 40 ? cv.last_message.slice(0, 40) + '…' : cv.last_message) : 'Start a conversation…';
+        const t = cv.last_message_time ? new Date(cv.last_message_time) : null;
+        const timeStr = t ? timeAgo(cv.last_message_time) : '';
+        const pic = cv.profile_picture;
+        return `
+        <div class="chat-conv-item ${isActive ? 'active' : ''}" onclick="openInlineChat(${cv.user_id}, '${cv.user_name.replace(/'/g,"\\'")}', '${cv.user_role}', '${pic || ''}')">
+            <div class="chat-conv-avatar" style="background:${pic ? 'none' : avatarColor(cv.user_name)}">
+                ${pic ? `<img src="${pic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : cv.user_name.charAt(0).toUpperCase()}
+            </div>
+            <div class="chat-conv-info">
+                <div class="chat-conv-name">
+                    ${cv.user_name}
+                    <span class="chat-conv-role-badge">${cv.user_role}</span>
+                </div>
+                <div class="chat-conv-preview">${preview}</div>
+            </div>
+            <div class="chat-conv-meta">
+                <span class="chat-conv-time">${timeStr}</span>
+                ${cv.unread_count > 0 ? `<span class="chat-unread-badge">${cv.unread_count}</span>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ===== Filter conversations =====
+window.filterConversations = function(query) {
+    const q = query.toLowerCase().trim();
+    if (!q) { renderConversationsList(window.allConversations); return; }
+    const filtered = window.allConversations.filter(cv =>
+        cv.user_name.toLowerCase().includes(q) || cv.user_role.toLowerCase().includes(q)
+    );
+    renderConversationsList(filtered);
+};
+
+// ===== Open inline chat (Messages tab) =====
+window.openInlineChat = async function(userId, userName, userRole, userPic) {
+    window.currentChatUserId = userId;
+    window.currentChatUserName = userName;
+    window.currentChatUserRole = userRole || '';
+    window.currentChatUserPic = userPic || '';
+
+    // Update header
+    const nameEl = document.getElementById('inlineChatName');
+    const roleEl = document.getElementById('inlineChatRole');
+    const avatarEl = document.getElementById('inlineChatAvatar');
+    if (nameEl) nameEl.textContent = userName;
+    if (roleEl) roleEl.textContent = userRole || 'Member';
+    if (avatarEl) {
+        if (userPic) {
+            avatarEl.innerHTML = `<img src="${userPic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            avatarEl.style.background = 'none';
+        } else {
+            avatarEl.textContent = userName.charAt(0).toUpperCase();
+            avatarEl.style.background = avatarColor(userName);
+        }
+    }
+
+    // Show active view, hide welcome
+    document.getElementById('chatWelcome').style.display = 'none';
+    document.getElementById('chatActiveView').style.display = 'flex';
+
+    // Mark active in sidebar
+    document.querySelectorAll('.chat-conv-item').forEach(el => el.classList.remove('active'));
+    // Re-render to highlight
+    renderConversationsList(window.allConversations);
+
+    // Load messages
+    await loadInlineMessages(userId);
+
+    // Start auto-refresh
+    clearInterval(window.chatRefreshTimer);
+    window.chatRefreshTimer = setInterval(() => loadInlineMessages(userId), 5000);
+
+    // Focus input
+    const input = document.getElementById('inlineChatInput');
+    if (input) input.focus();
+};
+
+// ===== Load messages into inline chat =====
+async function loadInlineMessages(userId) {
+    const body = document.getElementById('inlineChatBody');
+    if (!body) return;
+    try {
+        const r = await fetch(`${API}/api/messages/${userId}`, { headers: H() });
+        const msgs = await r.json();
+        const wasAtBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 50;
+        renderBubbles(msgs, body);
+        if (wasAtBottom) body.scrollTop = body.scrollHeight;
+    } catch (e) {
+        body.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Failed to load messages</div>';
+    }
+}
+
+// ===== Send message from inline chat =====
+window.sendInlineMessage = async function() {
+    const input = document.getElementById('inlineChatInput');
+    const val = input.value.trim();
+    if (!val || !window.currentChatUserId) return;
+    input.value = '';
+    try {
+        const r = await fetch(`${API}/api/messages/`, {
+            method: 'POST',
+            headers: H(),
+            body: JSON.stringify({ receiver_id: window.currentChatUserId, content: val })
+        });
+        if (r.ok) {
+            await loadInlineMessages(window.currentChatUserId);
+            loadConversations(); // refresh sidebar
+        }
+    } catch (e) { toast('Failed to send message'); }
+};
+
+// ===== Pop-out overlay from profile modal =====
+window.openChatFromProfile = function() {
+    document.getElementById('profileModal').classList.remove('active');
+    const overlay = document.getElementById('chatOverlay');
+    overlay.style.display = 'flex';
+    document.getElementById('chatTitle').textContent = window.currentChatUserName;
+
+    // Set overlay avatar
+    const av = document.getElementById('overlayAvatar');
+    if (av) {
+        if (window.currentChatUserPic) {
+            av.innerHTML = `<img src="${window.currentChatUserPic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            av.style.background = 'none';
+        } else {
+            av.textContent = (window.currentChatUserName || 'U').charAt(0).toUpperCase();
+            av.style.background = 'rgba(255,255,255,0.2)';
+        }
+    }
+
+    loadOverlayMessages(window.currentChatUserId);
+};
+
+// ===== Pop-out overlay from inline chat ("minimize") =====
+window.minimizeToOverlay = function() {
+    const overlay = document.getElementById('chatOverlay');
+    overlay.style.display = 'flex';
+    document.getElementById('chatTitle').textContent = window.currentChatUserName;
+    const av = document.getElementById('overlayAvatar');
+    if (av) {
+        if (window.currentChatUserPic) {
+            av.innerHTML = `<img src="${window.currentChatUserPic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            av.style.background = 'none';
+        } else {
+            av.textContent = (window.currentChatUserName || 'U').charAt(0).toUpperCase();
+            av.style.background = 'rgba(255,255,255,0.2)';
+        }
+    }
+    loadOverlayMessages(window.currentChatUserId);
+};
+
+// ===== Expand overlay to inline (Messages tab) =====
+window.expandToInline = function() {
+    closeChatOverlay();
+    showTab('messages');
+    if (window.currentChatUserId) {
+        setTimeout(() => {
+            openInlineChat(window.currentChatUserId, window.currentChatUserName, window.currentChatUserRole, window.currentChatUserPic);
+        }, 200);
+    }
+};
+
+window.closeChatOverlay = function() {
+    document.getElementById('chatOverlay').style.display = 'none';
+};
+
+// ===== Load messages into overlay =====
+async function loadOverlayMessages(userId) {
+    const cb = document.getElementById('chatBody');
+    cb.innerHTML = '<div style="text-align:center; padding:20px; color:#888;"><i class="fas fa-spinner fa-spin"></i></div>';
+    try {
+        const r = await fetch(`${API}/api/messages/${userId}`, { headers: H() });
+        const msgs = await r.json();
+        renderBubbles(msgs, cb);
+    } catch (e) {
+        cb.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Failed to load messages</div>';
+    }
+}
+
+// ===== Send message from overlay =====
+window.sendMessage = async function() {
+    const input = document.getElementById('chatInput');
+    const val = input.value.trim();
+    if (!val || !window.currentChatUserId) return;
+    input.value = '';
+    try {
+        const r = await fetch(`${API}/api/messages/`, {
+            method: 'POST',
+            headers: H(),
+            body: JSON.stringify({ receiver_id: window.currentChatUserId, content: val })
+        });
+        if (r.ok) {
+            loadOverlayMessages(window.currentChatUserId);
+            loadConversations();
+        }
+    } catch (e) { toast('Failed to send message'); }
+};
+
+// ===== Tab loading hook =====
+const originalShowTab = window.showTab;
+window.showTab = function(name) {
+    document.querySelectorAll('.jec-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.ln-tab-content').forEach(c => c.classList.remove('active'));
+    const cap = name.charAt(0).toUpperCase() + name.slice(1);
+    const t = document.getElementById(`tab${cap}`), c = document.getElementById(`content${cap}`);
+    if (t) t.classList.add('active'); if (c) c.classList.add('active');
+    if (name === 'feed') loadPosts();
+    if (name === 'directory') loadDirectory();
+    if (name === 'messages') loadConversations();
+};
+
+// Close modals on overlay click
+['postModal', 'profileModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.onclick = (e) => { if (e.target.id === id) el.classList.remove('active'); };
+});
+
 document.addEventListener('DOMContentLoaded', () => { init(); const p = new URLSearchParams(window.location.search); const t = p.get('tab'); if (t) showTab(t); else showTab('feed'); });
+

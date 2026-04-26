@@ -41,6 +41,7 @@
                     <li><a href="/dashboard?tab=directory" class="jec-nav-link"><i class="fas fa-users"></i> Network</a></li>
                     <li><a href="/jobs" class="jec-nav-link"><i class="fas fa-briefcase"></i> Job Board</a></li>
                     <li><a href="/events" class="jec-nav-link"><i class="fas fa-calendar-alt"></i> Events</a></li>
+                    <li><a href="/dashboard?tab=messages" class="jec-nav-link" id="navMessages"><i class="fas fa-comments"></i> Messages</a></li>
                     <li><a href="#" class="jec-nav-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
@@ -86,6 +87,7 @@
                             <button class="jec-tab active" onclick="showTab('feed')" id="tabFeed"><i class="fas fa-newspaper"></i> Feed</button>
                             <button class="jec-tab" onclick="showTab('directory')" id="tabDirectory"><i class="fas fa-address-book"></i> Alumni</button>
                             <button class="jec-tab" onclick="showTab('profile')" id="tabProfile"><i class="fas fa-user-circle"></i> Profile</button>
+                            <button class="jec-tab" onclick="showTab('messages')" id="tabMessages"><i class="fas fa-comments"></i> Messages</button>
                             <button class="jec-tab" onclick="showTab('applications')" id="tabApplications" style="display:none"><i class="fas fa-clipboard-list"></i> Apps</button>
                             <button class="jec-tab" onclick="showTab('admin')" id="tabAdmin" style="display:none"><i class="fas fa-user-shield"></i> Admin</button>
                         </div>
@@ -174,6 +176,59 @@
                         </div>
                     </div>
 
+                    <!-- MESSAGES TAB -->
+                    <div class="ln-tab-content" id="contentMessages">
+                        <div class="chat-container">
+                            <!-- Conversations Sidebar -->
+                            <div class="chat-sidebar">
+                                <div class="chat-sidebar-header">
+                                    <h3><i class="fas fa-comments"></i> Conversations</h3>
+                                </div>
+                                <div class="chat-search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="chatSearchInput" placeholder="Search conversations..." oninput="filterConversations(this.value)">
+                                </div>
+                                <div id="conversationsContainer" class="chat-conversations-list">
+                                    <div class="chat-empty-state">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Loading conversations...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Active Chat Panel -->
+                            <div class="chat-main-panel" id="chatMainPanel">
+                                <div class="chat-welcome-state" id="chatWelcome">
+                                    <div class="chat-welcome-icon">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </div>
+                                    <h3>Your Messages</h3>
+                                    <p>Select a conversation to start chatting with your connections.</p>
+                                </div>
+                                <div class="chat-active-view" id="chatActiveView" style="display:none;">
+                                    <div class="chat-active-header" id="chatActiveHeader">
+                                        <div class="chat-active-user">
+                                            <div class="chat-active-avatar" id="inlineChatAvatar">U</div>
+                                            <div class="chat-active-info">
+                                                <span class="chat-active-name" id="inlineChatName">User</span>
+                                                <span class="chat-active-role" id="inlineChatRole">Alumni</span>
+                                            </div>
+                                        </div>
+                                        <button class="chat-minimize-btn" onclick="minimizeToOverlay()" title="Pop out chat">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </button>
+                                    </div>
+                                    <div class="chat-messages-body" id="inlineChatBody">
+                                    </div>
+                                    <div class="chat-input-bar">
+                                        <input type="text" id="inlineChatInput" placeholder="Type a message..." onkeypress="if(event.key === 'Enter') sendInlineMessage()">
+                                        <button onclick="sendInlineMessage()" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- APPLICATIONS -->
                     <div class="ln-tab-content" id="contentApplications">
                         <div class="jec-card"><div class="jec-card-header">Target Opportunities</div><div id="applicationsContainer"></div></div>
@@ -227,8 +282,30 @@
                     <strong style="font-size:0.8rem; display:block; margin-bottom:5px; color:#555;">Technical Expertise</strong>
                     <p id="pModalSkills" style="font-size:0.85rem; color:var(--jec-maroon); font-weight:600;"></p>
                 </div>
-                <div style="margin-top:20px; text-align:right;"><button class="jec-btn-primary" onclick="document.getElementById('profileModal').classList.remove('active')">Close Detail</button></div>
+                <div style="margin-top:20px; text-align:right;">
+                    <button class="jec-btn-outline" id="pModalMessageBtn" style="margin-right:10px; display:inline-block;" onclick="openChatFromProfile()"><i class="fas fa-comment"></i> Direct Message</button>
+                    <button class="jec-btn-primary" onclick="document.getElementById('profileModal').classList.remove('active')">Close Detail</button>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- DIRECT CHAT OVERLAY (pop-out mini chat) -->
+    <div id="chatOverlay" class="chat-overlay">
+        <div class="chat-overlay-header">
+            <div class="chat-overlay-user">
+                <div class="chat-overlay-avatar" id="overlayAvatar">U</div>
+                <span id="chatTitle">Messaging</span>
+            </div>
+            <div class="chat-overlay-actions">
+                <button onclick="expandToInline()" title="Open in Messages tab"><i class="fas fa-expand-alt"></i></button>
+                <button onclick="closeChatOverlay()"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div id="chatBody" class="chat-overlay-body"></div>
+        <div class="chat-overlay-input">
+            <input type="text" id="chatInput" placeholder="Write a message..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button onclick="sendMessage()" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 

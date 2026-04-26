@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 import os
 
 from app.database import engine, Base
-from app.routes import auth, users, jobs, events, posts, connections, resume
+from app.routes import auth, users, jobs, events, posts, connections, resume, messages
 
 # Skip create_all entirely to prevent lambda hanging on boot
 # Database schema was already manually created via seed_data.py
@@ -36,6 +36,7 @@ app.include_router(events.router)
 app.include_router(posts.router)
 app.include_router(connections.router)
 app.include_router(resume.router)
+app.include_router(messages.router)
 
 # Serve frontend static files
 frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")

@@ -189,12 +189,17 @@
             
             document.getElementById('applyModal').classList.add('active'); 
         }
-function closeApply(){ 
+        function closeApply(){ 
             document.getElementById('portfolioLink').value = '';
             document.getElementById('coverLetter').value = '';
             document.getElementById('appResume').value = '';
             document.getElementById('applyModal').classList.remove('active'); 
         }
+
+        // Close modal on overlay click
+        document.getElementById('applyModal').onclick = (e) => {
+            if (e.target.id === 'applyModal') closeApply();
+        };
         
         async function submitApp(){
             const fd = new FormData();

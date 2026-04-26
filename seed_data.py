@@ -47,6 +47,20 @@ alumni4 = User(name="Vikram Singh", email="vikram@alumni.com", hashed_password=p
 alumni5 = User(name="Neha Gupta", email="neha@alumni.com", hashed_password=password, role="alumni",
     batch="2021", branch="Computer Science", company="Flipkart", skills="React, Node.js, TypeScript, MongoDB", bio="Full Stack Developer at Flipkart. Building the future of e-commerce.", profile_picture="https://i.pravatar.cc/150?u=neha")
 
+# 10 More Alumni as requested (name@gmail.com)
+more_alumni = [
+    User(name="Anil Kapur", email="anil@gmail.com", hashed_password=password, role="alumni", batch="2015", branch="Mechanical", company="Tesla", skills="Robotics", bio="Engineering lead."),
+    User(name="Bina Dash", email="bina@gmail.com", hashed_password=password, role="alumni", batch="2016", branch="IT", company="Meta", skills="Frontend", bio="Senior Developer."),
+    User(name="Chetan Jain", email="chetan@gmail.com", hashed_password=password, role="alumni", batch="2014", branch="CS", company="Netflix", skills="Backend", bio="Architect."),
+    User(name="Deepa Mani", email="deepa@gmail.com", hashed_password=password, role="alumni", batch="2017", branch="Electronics", company="Intel", skills="Hardware", bio="Design Engineer."),
+    User(name="Esha Rao", email="esha@gmail.com", hashed_password=password, role="alumni", batch="2018", branch="Civil", company="L&T", skills="Structures", bio="Project Manager."),
+    User(name="Farhan Ali", email="farhan@gmail.com", hashed_password=password, role="alumni", batch="2013", branch="CS", company="IBM", skills="Mainframe", bio="Consultant."),
+    User(name="Geeta Iyer", email="geeta@gmail.com", hashed_password=password, role="alumni", batch="2019", branch="IT", company="Adobe", skills="UI/UX", bio="Creative Lead."),
+    User(name="Himesh Resh", email="himesh@gmail.com", hashed_password=password, role="alumni", batch="2012", branch="Electronics", company="Samsung", skills="Embedded", bio="Tech Lead."),
+    User(name="Ishita Sen", email="ishita@gmail.com", hashed_password=password, role="alumni", batch="2020", branch="CS", company="Uber", skills="Distributed Systems", bio="SDE."),
+    User(name="Jatin Lal", email="jatin@gmail.com", hashed_password=password, role="alumni", batch="2011", branch="Mechanical", company="Ford", skills="Automotive", bio="Director.")
+]
+
 student1 = User(name="Arjun Verma", email="student@alumni.com", hashed_password=password, role="student",
     batch="2025", branch="Computer Science", skills="Python, JavaScript, React", bio="Final year CS student. Looking for software engineering roles.", profile_picture="https://i.pravatar.cc/150?u=arjun")
 
@@ -56,7 +70,21 @@ student2 = User(name="Kavya Nair", email="kavya@alumni.com", hashed_password=pas
 student3 = User(name="Rohan Mehta", email="rohan@alumni.com", hashed_password=password, role="student",
     batch="2026", branch="Information Technology", skills="Java, Spring Boot, MySQL", bio="Pre-final year IT student interested in backend development.", profile_picture="https://i.pravatar.cc/150?u=rohan")
 
-users = [admin, alumni1, alumni2, alumni3, alumni4, alumni5, student1, student2, student3]
+# 10 More Students as requested (name@gmail.com)
+more_students = [
+    User(name="Karan Johar", email="karan@gmail.com", hashed_password=password, role="student", batch="2025", branch="CS", bio="Aspiring dev."),
+    User(name="Laxmi Kant", email="laxmi@gmail.com", hashed_password=password, role="student", batch="2026", branch="IT", bio="Tech enthusiast."),
+    User(name="Manoj Baj", email="manoj@gmail.com", hashed_password=password, role="student", batch="2027", branch="Electronics", bio="Learner."),
+    User(name="Nitin Gad", email="nitin@gmail.com", hashed_password=password, role="student", batch="2025", branch="Mechanical", bio="Future engineer."),
+    User(name="Om Puri", email="om@gmail.com", hashed_password=password, role="student", batch="2026", branch="Civil", bio="Hard worker."),
+    User(name="Pankaj Trip", email="pankaj@gmail.com", hashed_password=password, role="student", batch="2027", branch="CS", bio="Coding is life."),
+    User(name="Qasim Ali", email="qasim@gmail.com", hashed_password=password, role="student", batch="2025", branch="IT", bio="Security focused."),
+    User(name="Rahul Roy", email="rahul@gmail.com", hashed_password=password, role="student", batch="2026", branch="Electronics", bio="Hardware fan."),
+    User(name="Suniel Shet", email="suniel@gmail.com", hashed_password=password, role="student", batch="2027", branch="Mechanical", bio="Design lover."),
+    User(name="Tina Munim", email="tina@gmail.com", hashed_password=password, role="student", batch="2025", branch="CS", bio="Fullstack path.")
+]
+
+users = [admin, alumni1, alumni2, alumni3, alumni4, alumni5, student1, student2, student3] + more_alumni + more_students
 db.add_all(users)
 db.commit()
 for u in users:
@@ -101,11 +129,11 @@ db.commit()
 # ===== POSTS =====
 print("📝 Creating posts...")
 posts = [
-    Post(title="Excited to join Google!", content="Thrilled to announce that I've joined Google India as a Senior ML Engineer! 🎉 The journey from our college to here has been incredible. Remember, every small step counts. Keep learning, keep growing! #NewBeginnings #GoogleIndia", author_id=alumni1.id),
+    Post(title="Excited to join Google!", content="Thrilled to announce that I've joined Google India as a Senior ML Engineer!  The journey from our college to here has been incredible. Remember, every small step counts. Keep learning, keep growing! #NewBeginnings #GoogleIndia", author_id=alumni1.id),
 
     Post(title="Hiring for my team!", content="My team at Microsoft is hiring Cloud Engineers! If you're passionate about Azure and distributed systems, reach out to me. I'd love to refer fellow alumni. Check the jobs section for details. 🚀", author_id=alumni2.id),
 
-    Post(content="Just completed my AWS Solutions Architect certification! 🏆 Highly recommend it for anyone interested in cloud computing. Happy to share study resources with juniors. DM me!", author_id=alumni3.id),
+    Post(content="Just completed my AWS Solutions Architect certification!  Highly recommend it for anyone interested in cloud computing. Happy to share study resources with juniors. DM me!", author_id=alumni3.id),
 
     Post(title="College memories ❤️", content="Visited our alma mater today after 5 years. So many memories! The new building looks amazing. Met some current students and their energy reminded me of our days. Time flies! 📸", author_id=alumni4.id),
 
@@ -206,9 +234,13 @@ print(f"{'Alumni':<10} {'Amit Kumar':<20} {'amit@alumni.com':<25}")
 print(f"{'Alumni':<10} {'Sneha Reddy':<20} {'sneha@alumni.com':<25}")
 print(f"{'Alumni':<10} {'Vikram Singh':<20} {'vikram@alumni.com':<25}")
 print(f"{'Alumni':<10} {'Neha Gupta':<20} {'neha@alumni.com':<25}")
+for u in more_alumni:
+    print(f"{'Alumni':<10} {u.name:<20} {u.email:<25}")
 print(f"{'Student':<10} {'Arjun Verma':<20} {'student@alumni.com':<25}")
 print(f"{'Student':<10} {'Kavya Nair':<20} {'kavya@alumni.com':<25}")
 print(f"{'Student':<10} {'Rohan Mehta':<20} {'rohan@alumni.com':<25}")
+for u in more_students:
+    print(f"{'Student':<10} {u.name:<20} {u.email:<25}")
 print("-"*50)
 print(f"\n📊 Created: {len(users)} users, {len(jobs)} jobs, {len(events)} events,")
 print(f"   {len(posts)} posts, {len(comments)} comments, {len(likes)} likes, {len(applications)} applications")
