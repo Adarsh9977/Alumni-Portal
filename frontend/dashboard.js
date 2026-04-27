@@ -254,6 +254,37 @@ window.loadConnectionCount = async function() {
     } catch (e) { }
 };
 
+window.openConnectionsModal = async function() {
+    const modal = document.getElementById('connectionsModal');
+    const container = document.getElementById('connectionsListContainer');
+    if (!modal || !container) return;
+    modal.classList.add('active');
+    container.innerHTML = loadingState('Loading connections', 'Fetching your accepted alumni connections...');
+    try {
+        const r = await fetch(`${API}/api/connections/my`, { headers: H() });
+        const connections = await r.json();
+        if (!connections.length) {
+            container.innerHTML = '<div class="jec-loading-state">No accepted connections yet. Visit the Alumni tab to connect.</div>';
+            return;
+        }
+        container.innerHTML = connections.map(conn => {
+            const otherName = conn.sender_id === user.id ? conn.receiver_name : conn.sender_name;
+            const otherId = conn.sender_id === user.id ? conn.receiver_id : conn.sender_id;
+            return `
+                <div class="ln-member">
+                    <div class="ln-member-avatar" style="background:${avatarColor(otherName || 'JEC')}">${(otherName || 'U').charAt(0).toUpperCase()}</div>
+                    <div class="ln-member-info">
+                        <div class="ln-member-name">${otherName || 'Unknown connection'}</div>
+                        <div class="ln-member-detail">Connected member · ID #${otherId}</div>
+                    </div>
+                    <button class="jec-btn-primary jec-btn-sm" onclick="document.getElementById('connectionsModal').classList.remove('active'); openInlineChat(${otherId}, '${(otherName || 'Member').replace(/'/g, "\\'")}', 'Connection', '')">Message</button>
+                </div>`;
+        }).join('');
+    } catch (e) {
+        container.innerHTML = '<div class="jec-loading-state">Could not load connections. Please try again.</div>';
+    }
+};
+
 window.uploadResume = async function() {
     const f = document.getElementById('resumeFile'); if (!f || !f.files[0]) return;
     const formData = new FormData(); formData.append('file', f.files[0]);
@@ -682,7 +713,7 @@ window.showTab = function(name) {
 };
 
 // Close modals on overlay click
-['postModal', 'profileModal'].forEach(id => {
+['postModal', 'profileModal', 'connectionsModal'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.onclick = (e) => { if (e.target.id === id) el.classList.remove('active'); };
 });

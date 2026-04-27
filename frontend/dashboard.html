@@ -65,7 +65,7 @@
                             <p id="sideHeadline" class="jec-headline">Community Member</p>
                             <div class="jec-stat-row"><span class="jec-stat-label">Role</span><span class="jec-stat-value" id="sideRole">...</span></div>
                             <div class="jec-stat-row"><span class="jec-stat-label">Batch</span><span class="jec-stat-value" id="sideBatch">...</span></div>
-                            <div class="jec-stat-row"><span class="jec-stat-label">Connections</span><span class="jec-stat-value" id="sideConnections">0</span></div>
+                            <div class="jec-stat-row" onclick="openConnectionsModal()" style="cursor:pointer;"><span class="jec-stat-label">Connections</span><span class="jec-stat-value" id="sideConnections">0</span></div>
                         </div>
                     </div>
 
@@ -285,6 +285,20 @@
                 <div style="margin-top:20px; text-align:right;">
                     <button class="jec-btn-outline" id="pModalMessageBtn" style="margin-right:10px; display:inline-block;" onclick="openChatFromProfile()"><i class="fas fa-comment"></i> Direct Message</button>
                     <button class="jec-btn-primary" onclick="document.getElementById('profileModal').classList.remove('active')">Close Detail</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ln-modal-overlay" id="connectionsModal">
+        <div class="jec-modal">
+            <div class="jec-modal-header"><h3>Your Connections</h3><button class="jec-close" onclick="document.getElementById('connectionsModal').classList.remove('active')">&times;</button></div>
+            <div class="jec-modal-body">
+                <div id="connectionsListContainer">
+                    <div class="jec-loading-state">
+                        <div class="jec-loader-icon"></div>
+                        <div class="jec-loading-title">Loading connections</div>
+                    </div>
                 </div>
             </div>
         </div>

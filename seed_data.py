@@ -93,6 +93,22 @@ db.commit()
 for u in users:
     db.refresh(u)
 
+# ===== CONNECTIONS =====
+print("🤝 Creating connections...")
+connections = []
+seen_pairs = set()
+for idx, sender in enumerate(users):
+    for offset in (1, 2, 3):
+        receiver = users[(idx + offset) % len(users)]
+        pair = tuple(sorted((sender.id, receiver.id)))
+        if pair in seen_pairs:
+            continue
+        seen_pairs.add(pair)
+        connections.append(Connection(sender_id=sender.id, receiver_id=receiver.id, status="accepted"))
+
+db.add_all(connections)
+db.commit()
+
 # ===== JOBS =====
 print("💼 Creating jobs...")
 jobs = [
@@ -244,7 +260,8 @@ for u in more_students:
     print(f"{'Student':<10} {u.name:<20} {u.email:<25}")
 print("-"*50)
 print(f"\n📊 Created: {len(users)} users, {len(jobs)} jobs, {len(events)} events,")
-print(f"   {len(posts)} posts, {len(comments)} comments, {len(likes)} likes, {len(applications)} applications")
+print(f"   {len(posts)} posts, {len(comments)} comments, {len(likes)} likes, {len(applications)} applications,")
+print(f"   {len(connections)} connections")
 print(f"\n🌐 Open http://localhost:8000 in your browser")
 
 db.close()
