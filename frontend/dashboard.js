@@ -277,12 +277,21 @@ window.openConnectionsModal = async function() {
                         <div class="ln-member-name">${otherName || 'Unknown connection'}</div>
                         <div class="ln-member-detail">Connected member · ID #${otherId}</div>
                     </div>
-                    <button class="jec-btn-primary jec-btn-sm" onclick="document.getElementById('connectionsModal').classList.remove('active'); openInlineChat(${otherId}, '${(otherName || 'Member').replace(/'/g, "\\'")}', 'Connection', '')">Message</button>
+                    <button class="jec-btn-primary jec-btn-sm" onclick="openConnectionMessage(${otherId}, '${(otherName || 'Member').replace(/'/g, "\\'")}')">Message</button>
                 </div>`;
         }).join('');
     } catch (e) {
         container.innerHTML = '<div class="jec-loading-state">Could not load connections. Please try again.</div>';
     }
+};
+
+window.openConnectionMessage = function(userId, userName) {
+    const modal = document.getElementById('connectionsModal');
+    if (modal) modal.classList.remove('active');
+    showTab('messages');
+    setTimeout(() => {
+        openInlineChat(userId, userName, 'Connection', '');
+    }, 100);
 };
 
 window.uploadResume = async function() {
