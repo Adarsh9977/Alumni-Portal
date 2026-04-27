@@ -16,6 +16,7 @@ from fastapi import Query, File, UploadFile, Form
 from datetime import datetime, timedelta
 import os
 import shutil
+import tempfile
 from ..cache import get_or_set, invalidate_namespace, make_cache_key
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
@@ -251,15 +252,17 @@ async def apply_for_job(
         if not resume.filename.lower().endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF resumes are supported.")
         
-        # Save JD-specific resume
-        upload_dir = "static/job_resumes"
-        os.makedirs(upload_dir, exist_ok=True)
         filename = f"app_{current_user.id}_job_{job_id}.pdf"
-        file_path = os.path.join(upload_dir, filename)
-        
-        with open(file_path, "wb") as f:
-            shutil.copyfileobj(resume.file, f)
-        file_url = f"/static/job_resumes/{filename}"
+        upload_dir = os.path.join(tempfile.gettempdir(), "job_resumes") if os.environ.get("VERCEL") else "static/job_resumes"
+        try:
+            os.makedirs(upload_dir, exist_ok=True)
+            file_path = os.path.join(upload_dir, filename)
+            with open(file_path, "wb") as f:
+                shutil.copyfileobj(resume.file, f)
+        except OSError as exc:
+            raise HTTPException(status_code=400, detail="Resume upload storage is not available. Try applying without a resume.") from exc
+
+        file_url = file_path if os.environ.get("VERCEL") else f"/static/job_resumes/{filename}"
 
     new_application = Application(
         job_id=job_id,

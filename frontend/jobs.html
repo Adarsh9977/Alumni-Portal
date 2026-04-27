@@ -129,7 +129,7 @@
         if(!token||!user)location.href='/login';
 
         function H(){return{'Content-Type':'application/json','Authorization':`Bearer ${token}`}}
-        function toast(m){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`ln-toast`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),3000)}
+        function toast(m,type='info'){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`ln-toast ${type==='success'?'ln-toast-success':type==='error'?'ln-toast-error':''}`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),3000)}
         function loadingState(title, subtitle='This can take a moment on the first production request.'){
             return `<div class="jec-loading-state">
                 <div class="jec-loader-icon"></div>
@@ -238,10 +238,11 @@
                     headers:{'Authorization':`Bearer ${token}`},
                     body:fd
                 });
-                if(r.ok){toast('Application & Targeted Resume Logged!');closeApply();}
-                else { const err = await r.json(); toast(err.detail || 'Application error.'); }
+                const d = await r.json();
+                if(r.ok){toast(d.message || 'Application successful','success');closeApply();}
+                else { toast(d.detail || 'Application error.','error'); }
             } catch(e) {
-                toast('Application service unavailable.');
+                toast('Application service unavailable.','error');
             } finally {
                 btn.disabled=false; btn.innerHTML='Apply';
             }

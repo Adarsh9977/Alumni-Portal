@@ -188,6 +188,8 @@ body {
 /* TOAST */
 .ln-toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
 .ln-toast { background: #323232; color: #fff; padding: 12px 24px; border-radius: 6px; margin-top: 10px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.ln-toast-success { background: #057642; color: #fff; }
+.ln-toast-error { background: #800000; color: #fff; }
 
 /* TABS VISIBILITY */
 .ln-tab-content { display: none; }
