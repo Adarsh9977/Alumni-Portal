@@ -10,6 +10,18 @@ function loadingState(title, subtitle = 'This can take a moment on the first pro
         <div class="jec-loading-subtitle">${subtitle}</div>
     </div>`;
 }
+function setBtnBusy(btn, label) {
+    if (!btn) return null;
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${label}`;
+    return original;
+}
+function restoreBtn(btn, original) {
+    if (!btn || original === null) return;
+    btn.disabled = false;
+    btn.innerHTML = original;
+}
 
 window.showTab = function(name) {
     document.querySelectorAll('.jec-tab').forEach(b => b.classList.remove('active'));
@@ -78,20 +90,20 @@ window.loadPosts = async function() {
                 </div>
                 <div class="ln-post-body">${p.title ? `<strong style="display:block;margin-bottom:8px;font-size:1.1rem;color:var(--jec-maroon);">${p.title}</strong>` : ''}${p.content}</div>
                 <div class="ln-post-actions">
-                    <button class="ln-post-action" onclick="toggleLike(${p.id})"><i class="fas fa-thumbs-up"></i> ${p.like_count || ''} Like</button>
+                    <button class="ln-post-action" onclick="toggleLike(${p.id}, this)"><i class="fas fa-thumbs-up"></i> ${p.like_count || ''} Like</button>
                     <button class="ln-post-action" onclick="toggleComments(${p.id})"><i class="fas fa-comment"></i> ${(p.comments && p.comments.length) || ''} Comment</button>
-                    ${(p.author_id === user.id || user.role === 'admin') ? `<button class="ln-post-action" style="color:var(--jec-maroon);" onclick="deletePost(${p.id})"><i class="fas fa-trash"></i></button>` : ''}
+                    ${(p.author_id === user.id || user.role === 'admin') ? `<button class="ln-post-action" style="color:var(--jec-maroon);" onclick="deletePost(${p.id}, this)"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
                 <div id="comments-${p.id}" style="display:none; border-top:1px solid #eee; padding-top:10px; margin-top:10px;">
                     <div style="display:flex; gap:10px; margin-bottom:15px;">
                         <input type="text" id="comment-input-${p.id}" class="jec-input" placeholder="Add a comment..." style="flex:1;">
-                        <button class="jec-btn-primary" onclick="addComment(${p.id})">Post</button>
+                        <button class="jec-btn-primary" onclick="addComment(${p.id}, this)">Post</button>
                     </div>
                     <div class="comments-list">
                         ${(p.comments || []).map(c => `
                             <div style="background:#f3f2ef; padding:10px; border-radius:8px; margin-bottom:10px;">
                                 <div style="font-weight:600; font-size:0.9rem;">${c.author_name} <span style="font-weight:400; font-size:0.8rem; color:#666;">${timeAgo(c.created_at)}</span>
-                                ${(c.author_id === user.id || user.role === 'admin') ? `<button onclick="deleteComment(${c.id})" style="float:right; background:none; border:none; color:#800000; cursor:pointer;"><i class="fas fa-trash"></i></button>` : ''}
+                                ${(c.author_id === user.id || user.role === 'admin') ? `<button onclick="deleteComment(${c.id}, this)" style="float:right; background:none; border:none; color:#800000; cursor:pointer;"><i class="fas fa-trash"></i></button>` : ''}
                                 </div>
                                 <div style="font-size:0.95rem; margin-top:4px;">${c.content}</div>
                             </div>
@@ -167,8 +179,29 @@ window.viewProfile = function(id, name, role, company, branch, bio, skills, pic)
 };
 
 window.sendConnection = async function(id, btn) {
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Pending';
-    try { const r = await fetch(`${API}/api/connections/`, { method: 'POST', headers: H(), body: JSON.stringify({ receiver_id: id }) }); if (r.ok) toast('Connection request sent!'); } catch (e) { toast('Action failed.'); }
+    const original = setBtnBusy(btn, 'Sending');
+    try {
+        const r = await fetch(`${API}/api/connections/`, { method: 'POST', headers: H(), body: JSON.stringify({ receiver_id: id }) });
+        const data = await r.json().catch(() => ({}));
+        if (r.ok) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Sent';
+            btn.disabled = true;
+            toast('Connection request sent!');
+            loadPendingConnectionRequests();
+            return;
+        }
+        if ((data.detail || '').toLowerCase().includes('already')) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Sent';
+            btn.disabled = true;
+            toast('Connection request already exists.');
+            return;
+        }
+        restoreBtn(btn, original);
+        toast(data.detail || 'Action failed.');
+    } catch (e) {
+        restoreBtn(btn, original);
+        toast('Action failed.');
+    }
 };
 
 window.loadPendingConnectionRequests = async function() {
@@ -181,19 +214,35 @@ window.loadPendingConnectionRequests = async function() {
             <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px;">
                 <div style="font-size:0.8rem; font-weight:700;">${req.sender_name}</div>
                 <div style="display:flex; gap:5px;">
-                    <button class="jec-btn-primary jec-btn-sm" style="padding:4px 8px; border-radius:4px;" onclick="respondReq(${req.id},'accepted')"><i class="fas fa-check"></i></button>
-                    <button class="jec-btn-primary jec-btn-sm" style="background:#eee; color:#666; padding:4px 8px; border-radius:4px;" onclick="respondReq(${req.id},'rejected')"><i class="fas fa-times"></i></button>
+                    <button class="jec-btn-primary jec-btn-sm" style="padding:4px 8px; border-radius:4px;" onclick="respondReq(${req.id},'accepted', this)"><i class="fas fa-check"></i></button>
+                    <button class="jec-btn-primary jec-btn-sm" style="background:#eee; color:#666; padding:4px 8px; border-radius:4px;" onclick="respondReq(${req.id},'rejected', this)"><i class="fas fa-times"></i></button>
                 </div>
             </div>
         `).join('');
     } catch (e) { }
 };
 
-window.respondReq = async function(id, status) {
+window.respondReq = async function(id, status, btn) {
+    const original = setBtnBusy(btn, status === 'accepted' ? 'Accepting' : 'Rejecting');
+    const group = btn ? btn.parentElement : null;
+    if (group) group.querySelectorAll('button').forEach(b => b.disabled = true);
     try {
         const r = await fetch(`${API}/api/connections/${id}/status`, { method: 'PUT', headers: H(), body: JSON.stringify({ status }) });
-        if (r.ok) { toast(`Professional request ${status}.`); loadPendingConnectionRequests(); loadConnectionCount(); }
-    } catch (e) { toast('Error synchronizing invitation.'); }
+        if (r.ok) {
+            if (group) group.innerHTML = `<span style="font-size:0.75rem; font-weight:800; color:var(--jec-maroon);">${status === 'accepted' ? 'Accepted' : 'Rejected'}</span>`;
+            toast(`Professional request ${status}.`);
+            loadPendingConnectionRequests();
+            loadConnectionCount();
+            return;
+        }
+        restoreBtn(btn, original);
+        if (group) group.querySelectorAll('button').forEach(b => b.disabled = false);
+        toast('Unable to update invitation.');
+    } catch (e) {
+        restoreBtn(btn, original);
+        if (group) group.querySelectorAll('button').forEach(b => b.disabled = false);
+        toast('Error synchronizing invitation.');
+    }
 };
 
 window.loadConnectionCount = async function() {
@@ -218,49 +267,89 @@ window.uploadResume = async function() {
     btn.disabled = false; btn.innerHTML = 'Analyze Resume';
 };
 
-window.createPost = async function() {
+window.createPost = async function(btn) {
     const t = document.getElementById('postTitle').value, c = document.getElementById('postContent').value;
     if (!c.trim()) return toast('Write a narrative first!');
+    const original = setBtnBusy(btn, 'Broadcasting');
     try {
         const r = await fetch(`${API}/api/posts/`, { method: 'POST', headers: H(), body: JSON.stringify({ title: t || null, content: c }) });
-        if (r.ok) { document.getElementById('postTitle').value = ''; document.getElementById('postContent').value = ''; document.getElementById('postModal').classList.remove('active'); toast('Identity verified. Post broadcasted!'); loadPosts(); }
-    } catch (e) { toast('Broadcast failed.'); }
+        if (r.ok) { if (btn) btn.innerHTML = '<i class="fas fa-check"></i> Posted'; document.getElementById('postTitle').value = ''; document.getElementById('postContent').value = ''; document.getElementById('postModal').classList.remove('active'); toast('Identity verified. Post broadcasted!'); loadPosts(); return; }
+        restoreBtn(btn, original);
+    } catch (e) { restoreBtn(btn, original); toast('Broadcast failed.'); }
 };
 
-window.deletePost = async function(id) { if (confirm('Delete professional update?')) { await fetch(`${API}/api/posts/${id}`, { method: 'DELETE', headers: H() }); loadPosts(); } };
-window.toggleLike = async function(id) { await fetch(`${API}/api/posts/${id}/like`, { method: 'POST', headers: H() }); loadPosts(); };
+window.deletePost = async function(id, btn) {
+    if (!confirm('Delete professional update?')) return;
+    const original = setBtnBusy(btn, '');
+    try {
+        const r = await fetch(`${API}/api/posts/${id}`, { method: 'DELETE', headers: H() });
+        if (r.ok) { if (btn) btn.innerHTML = '<i class="fas fa-check"></i>'; loadPosts(); return; }
+        restoreBtn(btn, original);
+    } catch (e) { restoreBtn(btn, original); toast('Delete failed.'); }
+};
+window.toggleLike = async function(id, btn) {
+    const original = setBtnBusy(btn, 'Updating');
+    try {
+        const r = await fetch(`${API}/api/posts/${id}/like`, { method: 'POST', headers: H() });
+        if (r.ok) { if (btn) btn.innerHTML = '<i class="fas fa-check"></i> Updated'; loadPosts(); return; }
+        restoreBtn(btn, original);
+    } catch (e) { restoreBtn(btn, original); toast('Could not update like.'); }
+};
 
 window.toggleComments = function(id) {
     const el = document.getElementById(`comments-${id}`);
     if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 };
 
-window.addComment = async function(id) {
+window.addComment = async function(id, btn) {
     const input = document.getElementById(`comment-input-${id}`);
     const val = input.value.trim();
     if (!val) return;
+    const original = setBtnBusy(btn, 'Posting');
+    input.disabled = true;
     try {
         const r = await fetch(`${API}/api/posts/${id}/comment`, { method: 'POST', headers: H(), body: JSON.stringify({ content: val }) });
         if (r.ok) {
+            if (btn) btn.innerHTML = '<i class="fas fa-check"></i> Posted';
             toast('Comment added!');
             await loadPosts();
             const el = document.getElementById(`comments-${id}`);
             if (el) el.style.display = 'block';
+            return;
         }
-    } catch (e) { toast('Error adding comment'); }
+        restoreBtn(btn, original);
+        input.disabled = false;
+    } catch (e) { restoreBtn(btn, original); input.disabled = false; toast('Error adding comment'); }
 };
 
-window.deleteComment = async function(cid) {
+window.deleteComment = async function(cid, btn) {
     if (!confirm('Delete this comment?')) return;
+    const original = setBtnBusy(btn, '');
     try {
         const r = await fetch(`${API}/api/posts/comment/${cid}`, { method: 'DELETE', headers: H() });
-        if (r.ok) { toast('Comment deleted'); loadPosts(); }
-    } catch (e) { toast('Error deleting comment'); }
+        if (r.ok) { if (btn) btn.innerHTML = '<i class="fas fa-check"></i>'; toast('Comment deleted'); loadPosts(); return; }
+        restoreBtn(btn, original);
+    } catch (e) { restoreBtn(btn, original); toast('Error deleting comment'); }
 };
-window.updateProfile = async function() {
+window.updateProfile = async function(btn) {
+    const original = setBtnBusy(btn, 'Saving');
     const data = { name: document.getElementById('profileName').value, batch: document.getElementById('profileBatch').value, branch: document.getElementById('profileBranch').value, company: document.getElementById('profileCompany').value, bio: document.getElementById('profileBio').value };
-    const r = await fetch(`${API}/api/users/me`, { method: 'PUT', headers: H(), body: JSON.stringify(data) });
-    if (r.ok) { const d = await r.json(); Object.assign(user, d.user); localStorage.setItem('user', JSON.stringify(user)); init(); toast('Digital Identity Synced!'); }
+    try {
+        const r = await fetch(`${API}/api/users/me`, { method: 'PUT', headers: H(), body: JSON.stringify(data) });
+        if (r.ok) {
+            const d = await r.json();
+            if (btn) btn.innerHTML = '<i class="fas fa-check"></i> Saved';
+            Object.assign(user, d.user);
+            localStorage.setItem('user', JSON.stringify(user));
+            init();
+            toast('Digital Identity Synced!');
+            return;
+        }
+        restoreBtn(btn, original);
+    } catch (e) {
+        restoreBtn(btn, original);
+        toast('Profile sync failed.');
+    }
 };
 
 window.uploadProfilePic = async function() {
@@ -272,10 +361,17 @@ window.uploadProfilePic = async function() {
     } catch (e) { toast('Error uploading image.'); }
 };
 
-window.removeProfilePic = async function() {
+window.removeProfilePic = async function(btn) {
     if (confirm('Revert to initial-based avatar?')) {
-        const r = await fetch(`${API}/api/users/profile-picture/remove`, { method: 'DELETE', headers: H() });
-        if (r.ok) { user.profile_picture = null; localStorage.setItem('user', JSON.stringify(user)); init(); toast('Personal photo removed.'); }
+        const original = setBtnBusy(btn, 'Removing');
+        try {
+            const r = await fetch(`${API}/api/users/profile-picture/remove`, { method: 'DELETE', headers: H() });
+            if (r.ok) { if (btn) btn.innerHTML = '<i class="fas fa-check"></i> Removed'; user.profile_picture = null; localStorage.setItem('user', JSON.stringify(user)); init(); toast('Personal photo removed.'); return; }
+            restoreBtn(btn, original);
+        } catch (e) {
+            restoreBtn(btn, original);
+            toast('Could not remove photo.');
+        }
     }
 }
 
@@ -437,10 +533,12 @@ async function loadInlineMessages(userId, showLoader = true) {
 }
 
 // ===== Send message from inline chat =====
-window.sendInlineMessage = async function() {
+window.sendInlineMessage = async function(btn) {
     const input = document.getElementById('inlineChatInput');
     const val = input.value.trim();
     if (!val || !window.currentChatUserId) return;
+    const original = setBtnBusy(btn, '');
+    input.disabled = true;
     input.value = '';
     try {
         const r = await fetch(`${API}/api/messages/`, {
@@ -449,10 +547,23 @@ window.sendInlineMessage = async function() {
             body: JSON.stringify({ receiver_id: window.currentChatUserId, content: val })
         });
         if (r.ok) {
+            if (btn) btn.innerHTML = '<i class="fas fa-check"></i>';
             await loadInlineMessages(window.currentChatUserId, false);
             loadConversations(); // refresh sidebar
+            input.disabled = false;
+            restoreBtn(btn, original);
+            input.focus();
+            return;
         }
-    } catch (e) { toast('Failed to send message'); }
+        input.value = val;
+        input.disabled = false;
+        restoreBtn(btn, original);
+    } catch (e) {
+        input.value = val;
+        input.disabled = false;
+        restoreBtn(btn, original);
+        toast('Failed to send message');
+    }
 };
 
 // ===== Pop-out overlay from profile modal =====
@@ -524,10 +635,12 @@ async function loadOverlayMessages(userId) {
 }
 
 // ===== Send message from overlay =====
-window.sendMessage = async function() {
+window.sendMessage = async function(btn) {
     const input = document.getElementById('chatInput');
     const val = input.value.trim();
     if (!val || !window.currentChatUserId) return;
+    const original = setBtnBusy(btn, '');
+    input.disabled = true;
     input.value = '';
     try {
         const r = await fetch(`${API}/api/messages/`, {
@@ -536,10 +649,23 @@ window.sendMessage = async function() {
             body: JSON.stringify({ receiver_id: window.currentChatUserId, content: val })
         });
         if (r.ok) {
+            if (btn) btn.innerHTML = '<i class="fas fa-check"></i>';
             loadOverlayMessages(window.currentChatUserId);
             loadConversations();
+            input.disabled = false;
+            restoreBtn(btn, original);
+            input.focus();
+            return;
         }
-    } catch (e) { toast('Failed to send message'); }
+        input.value = val;
+        input.disabled = false;
+        restoreBtn(btn, original);
+    } catch (e) {
+        input.value = val;
+        input.disabled = false;
+        restoreBtn(btn, original);
+        toast('Failed to send message');
+    }
 };
 
 // ===== Tab loading hook =====

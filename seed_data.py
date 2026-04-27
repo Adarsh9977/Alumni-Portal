@@ -13,16 +13,12 @@ Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
 
-# Clear existing data
-print("🗑️  Clearing existing data...")
-db.query(Like).delete()
-db.query(Comment).delete()
-db.query(Application).delete()
-db.query(Post).delete()
-db.query(Job).delete()
-db.query(Event).delete()
-db.query(User).delete()
-db.commit()
+existing_users = db.query(User).count()
+if existing_users:
+    print(f"✅ Seed skipped: database already has {existing_users} users.")
+    print("Build can continue without resetting existing data.")
+    db.close()
+    sys.exit(0)
 
 # ===== USERS =====
 print("👤 Creating users...")

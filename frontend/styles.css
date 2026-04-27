@@ -126,7 +126,7 @@ body {
 .jec-btn-primary { background: var(--jec-maroon); color: white; border: none; padding: 10px 24px; border-radius: 20px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .jec-btn-primary.jec-btn-sm { padding: 6px 16px; font-size: 0.8rem; }
 .jec-btn-primary:active { transform: scale(0.98); }
-.jec-btn-primary:disabled, .btn-login:disabled {
+.jec-btn-primary:disabled, .btn-login:disabled, .ln-btn-ghost:disabled, .ln-post-action:disabled, .chat-send-btn:disabled {
     opacity: 0.75;
     cursor: not-allowed;
 }

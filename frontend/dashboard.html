@@ -140,7 +140,7 @@
                                 <h3 style="font-size:1.1rem; margin-bottom:8px;">Digital Identity Photo</h3>
                                 <div style="display:flex; gap:10px;">
                                     <button class="jec-btn-primary jec-btn-sm" onclick="document.getElementById('picInput').click()">Update Photo</button>
-                                    <button class="ln-btn-ghost jec-btn-sm" onclick="removeProfilePic()" style="color:var(--jec-maroon);">Remove</button>
+                                    <button class="ln-btn-ghost jec-btn-sm" onclick="removeProfilePic(this)" style="color:var(--jec-maroon);">Remove</button>
                                     <input type="file" id="picInput" style="display:none;" accept="image/*" onchange="uploadProfilePic()">
                                 </div>
                                 <p style="font-size:0.75rem; color:#888; margin-top:8px;">JPG, PNG or GIF. Max size 2MB.</p>
@@ -153,7 +153,7 @@
                                 <div class="field"><label style="display:block; font-size:0.8rem; font-weight:700; color:#555; margin-bottom:5px;">Branch</label><input type="text" id="profileBranch" class="jec-modal-input" style="margin-bottom:0;"></div>
                                 <div class="field"><label style="display:block; font-size:0.8rem; font-weight:700; color:#555; margin-bottom:5px;">Current Organization</label><input type="text" id="profileCompany" class="jec-modal-input" style="margin-bottom:0;"></div>
                                 <div class="field" style="grid-column: 1/-1;"><label style="display:block; font-size:0.8rem; font-weight:700; color:#555; margin-bottom:5px;">Professional Bio</label><textarea id="profileBio" class="jec-modal-textarea" rows="3" style="margin-bottom:0;"></textarea></div>
-                                <div style="grid-column: 1/-1; text-align:right;"><button class="jec-btn-primary" onclick="updateProfile()">Save Identity</button></div>
+                                <div style="grid-column: 1/-1; text-align:right;"><button class="jec-btn-primary" onclick="updateProfile(this)">Save Identity</button></div>
                             </div>
                         </div>
 
@@ -222,7 +222,7 @@
                                     </div>
                                     <div class="chat-input-bar">
                                         <input type="text" id="inlineChatInput" placeholder="Type a message..." onkeypress="if(event.key === 'Enter') sendInlineMessage()">
-                                        <button onclick="sendInlineMessage()" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
+                                        <button onclick="sendInlineMessage(this)" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -257,7 +257,7 @@
             <div class="jec-modal-body">
                 <input class="jec-modal-input" id="postTitle" placeholder="Title for your update">
                 <textarea class="jec-modal-textarea" id="postContent" placeholder="Share your experience or ask a question..." rows="5"></textarea>
-                <div style="text-align:right;"><button class="jec-btn-primary" onclick="createPost()">Broadcast Post</button></div>
+                <div style="text-align:right;"><button class="jec-btn-primary" onclick="createPost(this)">Broadcast Post</button></div>
             </div>
         </div>
     </div>
@@ -305,7 +305,7 @@
         <div id="chatBody" class="chat-overlay-body"></div>
         <div class="chat-overlay-input">
             <input type="text" id="chatInput" placeholder="Write a message..." onkeypress="if(event.key === 'Enter') sendMessage()">
-            <button onclick="sendMessage()" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
+            <button onclick="sendMessage(this)" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
