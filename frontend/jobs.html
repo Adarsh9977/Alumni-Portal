@@ -50,7 +50,11 @@
                             <button id="postJobBtn" class="jec-btn-primary jec-btn-sm" style="display:none;" onclick="toggleForm()">Post Role</button>
                         </div>
                         <div id="jobsContainer">
-                            <div class="jec-loading-state"><i class="fas fa-spinner fa-spin"></i> Fetching career records...</div>
+                            <div class="jec-loading-state">
+                                <div class="jec-loader-icon"></div>
+                                <div class="jec-loading-title">Loading job board</div>
+                                <div class="jec-loading-subtitle">Fetching active roles and alumni referral data...</div>
+                            </div>
                         </div>
                     </div>
 
@@ -126,20 +130,38 @@
 
         function H(){return{'Content-Type':'application/json','Authorization':`Bearer ${token}`}}
         function toast(m){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`ln-toast`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),3000)}
+        function loadingState(title, subtitle='This can take a moment on the first production request.'){
+            return `<div class="jec-loading-state">
+                <div class="jec-loader-icon"></div>
+                <div class="jec-loading-title">${title}</div>
+                <div class="jec-loading-subtitle">${subtitle}</div>
+            </div>`;
+        }
 
         async function loadJobs(){
+            const c=document.getElementById('jobsContainer');
+            c.innerHTML=loadingState('Loading job board','Fetching active roles and alumni referral data...');
             try {
                 const r = await fetch(`${API}/api/jobs/`, {headers:H()});
                 const jobs = await r.json();
                 renderJobs(jobs);
-            } catch(e) { toast('Error synchronizing with board.'); }
+            } catch(e) {
+                c.innerHTML='<div class="jec-loading-state">Could not load job board. Please try again.</div>';
+                toast('Error synchronizing with board.');
+            }
         }
 
         async function loadRecommendations() {
-            toast('AI evaluating firm connections...');
-            const r = await fetch(`${API}/api/jobs/recommendations`, {headers:H()});
-            const jobs = await r.json();
-            renderJobs(jobs, true);
+            const c=document.getElementById('jobsContainer');
+            c.innerHTML=loadingState('Finding best matches','Evaluating alumni connections and matching companies...');
+            try {
+                const r = await fetch(`${API}/api/jobs/recommendations`, {headers:H()});
+                const jobs = await r.json();
+                renderJobs(jobs, true);
+            } catch(e) {
+                c.innerHTML='<div class="jec-loading-state">Could not load matches. Please try again.</div>';
+                toast('Match service unavailable.');
+            }
         }
 
         let currentJobs = [];
@@ -202,35 +224,51 @@
         };
         
         async function submitApp(){
-            const fd = new FormData();
-            fd.append('job_id', document.getElementById('applyJobId').value);
-            fd.append('cover_letter', document.getElementById('coverLetter').value);
-            const resFile = document.getElementById('appResume').files[0];
-            if(resFile) fd.append('resume', resFile);
+            const btn=document.querySelector('#applyModal .jec-btn-primary.jec-btn-block');
+            btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            try {
+                const fd = new FormData();
+                fd.append('job_id', document.getElementById('applyJobId').value);
+                fd.append('cover_letter', document.getElementById('coverLetter').value);
+                const resFile = document.getElementById('appResume').files[0];
+                if(resFile) fd.append('resume', resFile);
 
-            const r=await fetch(`${API}/api/jobs/apply`,{
-                method:'POST',
-                headers:{'Authorization':`Bearer ${token}`},
-                body:fd
-            });
-            if(r.ok){toast('Application & Targeted Resume Logged!');closeApply();}
-            else { const err = await r.json(); toast(err.detail || 'Application error.'); }
+                const r=await fetch(`${API}/api/jobs/apply`,{
+                    method:'POST',
+                    headers:{'Authorization':`Bearer ${token}`},
+                    body:fd
+                });
+                if(r.ok){toast('Application & Targeted Resume Logged!');closeApply();}
+                else { const err = await r.json(); toast(err.detail || 'Application error.'); }
+            } catch(e) {
+                toast('Application service unavailable.');
+            } finally {
+                btn.disabled=false; btn.innerHTML='Apply';
+            }
         }
 
         async function submitJob(){
-            const data={
-                title:document.getElementById('jobTitle').value,
-                company:document.getElementById('jobCompany').value,
-                description:document.getElementById('jobDesc').value,
-                location:document.getElementById('jobLocation').value||"Remote",
-                job_type:document.getElementById('jobType').value,
-                experience_level:document.getElementById('jobExp').value||"Entry Level",
-                requirements:document.getElementById('jobSkills').value,
-                salary_range:document.getElementById('jobSalary').value
-            };
-            if(!data.title||!data.company||!data.description){toast('Complete required details.'); return;}
-            const r=await fetch(`${API}/api/jobs/`,{method:'POST',headers:H(),body:JSON.stringify(data)});
-            if(r.ok){toast('Opportunity live on JEC network!');toggleForm();loadJobs();}
+            const btn=document.querySelector('#jobForm .jec-btn-primary');
+            btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Publishing...';
+            try {
+                const data={
+                    title:document.getElementById('jobTitle').value,
+                    company:document.getElementById('jobCompany').value,
+                    description:document.getElementById('jobDesc').value,
+                    location:document.getElementById('jobLocation').value||"Remote",
+                    job_type:document.getElementById('jobType').value,
+                    experience_level:document.getElementById('jobExp').value||"Entry Level",
+                    requirements:document.getElementById('jobSkills').value,
+                    salary_range:document.getElementById('jobSalary').value
+                };
+                if(!data.title||!data.company||!data.description){toast('Complete required details.'); return;}
+                const r=await fetch(`${API}/api/jobs/`,{method:'POST',headers:H(),body:JSON.stringify(data)});
+                if(r.ok){toast('Opportunity live on JEC network!');toggleForm();loadJobs();}
+            } catch(e) {
+                toast('Unable to publish opportunity.');
+            } finally {
+                btn.disabled=false; btn.innerHTML='Publish Opportunity';
+            }
         }
 
         async function delJob(id){ if(confirm('Remove listing?')){await fetch(`${API}/api/jobs/${id}`,{method:'DELETE',headers:H()});loadJobs();} }

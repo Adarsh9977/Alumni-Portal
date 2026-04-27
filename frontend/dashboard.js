@@ -3,6 +3,13 @@ if (!token || !user) { if (!['/login', '/register', '/'].includes(window.locatio
 
 function H() { return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }; }
 function toast(m) { const c = document.getElementById('toastContainer'); const d = document.createElement('div'); d.className = 'ln-toast'; d.textContent = m; c.appendChild(d); setTimeout(() => d.remove(), 3000); }
+function loadingState(title, subtitle = 'This can take a moment on the first production request.') {
+    return `<div class="jec-loading-state">
+        <div class="jec-loader-icon"></div>
+        <div class="jec-loading-title">${title}</div>
+        <div class="jec-loading-subtitle">${subtitle}</div>
+    </div>`;
+}
 
 window.showTab = function(name) {
     document.querySelectorAll('.jec-tab').forEach(b => b.classList.remove('active'));
@@ -52,10 +59,11 @@ function init() {
 }
 
 window.loadPosts = async function() {
+    const c = document.getElementById('postsContainer'); if (!c) return;
+    c.innerHTML = loadingState('Loading community feed', 'Fetching posts, comments, and reactions...');
     try {
         const r = await fetch(`${API}/api/posts/`, { headers: H() });
         const ps = await r.json();
-        const c = document.getElementById('postsContainer'); if (!c) return;
         if (!ps.length) { c.innerHTML = '<div class="jec-card" style="padding:40px; text-align:center; color:#888;">No conversations yet. Start one!</div>'; return; }
         c.innerHTML = ps.map(p => `
             <div class="jec-post">
@@ -92,7 +100,10 @@ window.loadPosts = async function() {
                 </div>
             </div>
         `).join('');
-    } catch (e) { toast('Failed to load community feed.'); }
+    } catch (e) {
+        c.innerHTML = '<div class="jec-loading-state">Could not load community feed. Please try again.</div>';
+        toast('Failed to load community feed.');
+    }
 };
 
 window.loadDirectory = async function() {
@@ -100,7 +111,7 @@ window.loadDirectory = async function() {
     let url = `${API}/api/users/directory?`;
     if (s) url += `search=${encodeURIComponent(s)}&`; if (b) url += `batch=${encodeURIComponent(b)}&`; if (c) url += `company=${encodeURIComponent(c)}&`;
     const container = document.getElementById('directoryContainer');
-    container.innerHTML = '<div class="jec-loading-state"><i class="fas fa-spinner fa-spin"></i> Searching Registry...</div>';
+    container.innerHTML = loadingState('Searching alumni registry', 'Matching names, batch, and company filters...');
     try {
         const r = await fetch(url, { headers: H() });
         const al = await r.json();
@@ -125,7 +136,10 @@ window.loadDirectory = async function() {
                 </div>
             </div>
         `).join('');
-    } catch (e) { toast('Search Engine offline.'); }
+    } catch (e) {
+        container.innerHTML = '<div class="jec-loading-state">Search failed. Please try again.</div>';
+        toast('Search Engine offline.');
+    }
 };
 
 window.viewProfile = function(id, name, role, company, branch, bio, skills, pic) {
@@ -297,6 +311,8 @@ function renderBubbles(msgs, container) {
 
 // ===== Load conversations list =====
 window.loadConversations = async function() {
+    const c = document.getElementById('conversationsContainer');
+    if (c) c.innerHTML = loadingState('Loading conversations', 'Syncing your alumni messages...');
     try {
         const r = await fetch(`${API}/api/messages/conversations`, { headers: H() });
         const convs = await r.json();
@@ -397,7 +413,7 @@ window.openInlineChat = async function(userId, userName, userRole, userPic) {
 
     // Start auto-refresh
     clearInterval(window.chatRefreshTimer);
-    window.chatRefreshTimer = setInterval(() => loadInlineMessages(userId), 5000);
+    window.chatRefreshTimer = setInterval(() => loadInlineMessages(userId, false), 5000);
 
     // Focus input
     const input = document.getElementById('inlineChatInput');
@@ -405,9 +421,10 @@ window.openInlineChat = async function(userId, userName, userRole, userPic) {
 };
 
 // ===== Load messages into inline chat =====
-async function loadInlineMessages(userId) {
+async function loadInlineMessages(userId, showLoader = true) {
     const body = document.getElementById('inlineChatBody');
     if (!body) return;
+    if (showLoader) body.innerHTML = loadingState('Loading messages', 'Opening the selected conversation...');
     try {
         const r = await fetch(`${API}/api/messages/${userId}`, { headers: H() });
         const msgs = await r.json();
@@ -432,7 +449,7 @@ window.sendInlineMessage = async function() {
             body: JSON.stringify({ receiver_id: window.currentChatUserId, content: val })
         });
         if (r.ok) {
-            await loadInlineMessages(window.currentChatUserId);
+            await loadInlineMessages(window.currentChatUserId, false);
             loadConversations(); // refresh sidebar
         }
     } catch (e) { toast('Failed to send message'); }
@@ -496,7 +513,7 @@ window.closeChatOverlay = function() {
 // ===== Load messages into overlay =====
 async function loadOverlayMessages(userId) {
     const cb = document.getElementById('chatBody');
-    cb.innerHTML = '<div style="text-align:center; padding:20px; color:#888;"><i class="fas fa-spinner fa-spin"></i></div>';
+    cb.innerHTML = loadingState('Loading messages', 'Opening the selected conversation...');
     try {
         const r = await fetch(`${API}/api/messages/${userId}`, { headers: H() });
         const msgs = await r.json();

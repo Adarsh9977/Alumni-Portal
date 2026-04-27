@@ -107,7 +107,8 @@
         document.getElementById('regForm').addEventListener('submit', async e => {
             e.preventDefault();
             const btn = document.getElementById('regBtn');
-            btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Creating secure account...';
+            showAlert('Creating your profile. First production request may take a few seconds.','success');
             try {
                 const r = await fetch(`${API}/api/register`, { 
                     method:'POST', 

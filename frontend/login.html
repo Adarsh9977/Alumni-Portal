@@ -113,7 +113,8 @@
         document.getElementById('loginForm').addEventListener('submit', async e => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Contacting secure API...';
+            showAlert('Signing you in. First production request may take a few seconds.','success');
             try {
                 const r = await fetch(`${API}/api/login`, { 
                     method:'POST', 

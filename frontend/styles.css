@@ -126,12 +126,46 @@ body {
 .jec-btn-primary { background: var(--jec-maroon); color: white; border: none; padding: 10px 24px; border-radius: 20px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .jec-btn-primary.jec-btn-sm { padding: 6px 16px; font-size: 0.8rem; }
 .jec-btn-primary:active { transform: scale(0.98); }
+.jec-btn-primary:disabled, .btn-login:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+}
 
 /* JOBS & EVENTS */
 .ln-job, .ln-event { display: flex; gap: 16px; padding: 20px; border-bottom: 1px solid #eee; }
 .ln-job-icon, .ln-event-date { width: 48px; height: 48px; border-radius: 8px; background: var(--jec-maroon-light); color: var(--jec-maroon); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 .ln-event-date { flex-direction: column; font-weight: 800; line-height: 1; }
 .ln-event-date span { font-size: 0.6rem; text-transform: uppercase; margin-top: 2px; }
+
+/* LOADING STATES */
+.jec-loading-state {
+    padding: 36px 24px;
+    text-align: center;
+    color: #666;
+    background: linear-gradient(180deg, #fff, #fff8f8);
+}
+.jec-loader-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 4px solid #f0dddd;
+    border-top-color: var(--jec-maroon);
+    margin: 0 auto 14px;
+    animation: jec-spin 0.8s linear infinite;
+}
+.jec-loading-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    color: var(--jec-maroon);
+    margin-bottom: 4px;
+}
+.jec-loading-subtitle {
+    font-size: 0.82rem;
+    color: #777;
+}
+@keyframes jec-spin {
+    to { transform: rotate(360deg); }
+}
 
 /* RESUME ANALYZER */
 .ai-resume-card .jec-ai-header { background: #1a1a1a; padding: 20px; color: #fff; display: flex; justify-content: space-between; align-items: center; }

@@ -46,7 +46,11 @@
                             <button id="postEventBtn" class="jec-btn-primary jec-btn-sm" style="display:none;" onclick="toggleForm()">Create Event</button>
                         </div>
                         <div id="eventsContainer">
-                            <div class="jec-loading-state"><i class="fas fa-spinner fa-spin"></i> Loading schedule...</div>
+                            <div class="jec-loading-state">
+                                <div class="jec-loader-icon"></div>
+                                <div class="jec-loading-title">Loading event schedule</div>
+                                <div class="jec-loading-subtitle">Fetching upcoming campus and alumni events...</div>
+                            </div>
                         </div>
                     </div>
 
@@ -89,12 +93,20 @@
 
         function H(){return{'Content-Type':'application/json','Authorization':`Bearer ${token}`}}
         function toast(m){const c=document.getElementById('toastContainer');const d=document.createElement('div');d.className=`ln-toast`;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),3000)}
+        function loadingState(title, subtitle='This can take a moment on the first production request.'){
+            return `<div class="jec-loading-state">
+                <div class="jec-loader-icon"></div>
+                <div class="jec-loading-title">${title}</div>
+                <div class="jec-loading-subtitle">${subtitle}</div>
+            </div>`;
+        }
 
         async function loadEvents(){
+            const c=document.getElementById('eventsContainer');
+            c.innerHTML=loadingState('Loading event schedule','Fetching upcoming campus and alumni events...');
             try {
                 const r=await fetch(`${API}/api/events/`,{headers:H()});
                 const events=await r.json();
-                const c=document.getElementById('eventsContainer');
                 if(!events.length){ c.innerHTML='<div class="jec-loading-state">No events scheduled.</div>'; return; }
                 c.innerHTML=events.map(e=>`
                     <div class="ln-event">
@@ -112,13 +124,24 @@
                             </div>
                         </div>
                     </div>`).join('');
-            } catch(e) { toast('Error loading records'); }
+            } catch(e) {
+                c.innerHTML='<div class="jec-loading-state">Could not load events. Please try again.</div>';
+                toast('Error loading records');
+            }
         }
 
         async function submitEvent(){
-            const data={title:document.getElementById('evTitle').value,description:document.getElementById('evDesc').value,date:document.getElementById('evDate').value,time:document.getElementById('evTime').value,location:document.getElementById('evLoc').value,event_type:document.getElementById('evType').value};
-            const r=await fetch(`${API}/api/events/`,{method:'POST',headers:H(),body:JSON.stringify(data)});
-            if(r.ok){toast('Event successfully published!');toggleForm();loadEvents();}
+            const btn=document.querySelector('#eventForm .jec-btn-primary');
+            btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Publishing...';
+            try {
+                const data={title:document.getElementById('evTitle').value,description:document.getElementById('evDesc').value,date:document.getElementById('evDate').value,time:document.getElementById('evTime').value,location:document.getElementById('evLoc').value,event_type:document.getElementById('evType').value};
+                const r=await fetch(`${API}/api/events/`,{method:'POST',headers:H(),body:JSON.stringify(data)});
+                if(r.ok){toast('Event successfully published!');toggleForm();loadEvents();}
+            } catch(e) {
+                toast('Unable to publish event.');
+            } finally {
+                btn.disabled=false; btn.innerHTML='Publish Event';
+            }
         }
 
         async function delEvent(id){ if(confirm('Delete?')){await fetch(`${API}/api/events/${id}`,{method:'DELETE',headers:H()});loadEvents();} }
