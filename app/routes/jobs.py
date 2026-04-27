@@ -146,7 +146,7 @@ def get_all_jobs(
         if days_ago:
             cutoff = datetime.now() - timedelta(days=days_ago)
             query = query.filter(Job.created_at >= cutoff)
-        return _serialize_jobs(db, query.order_by(Job.created_at.desc()).all())
+        return _serialize_jobs(db, query.order_by(Job.created_at.desc()).all(), current_user.id)
 
     return get_or_set(cache_key, load_jobs)
 
