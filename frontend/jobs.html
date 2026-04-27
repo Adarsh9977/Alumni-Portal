@@ -184,7 +184,9 @@
                             <span style="font-size:0.8rem; color:#057642; font-weight:700;"><i class="fas fa-user-tie"></i> ${j.alumni_count || 0} Alumni work here</span>
                         </div>
                         <div style="margin-top:18px; display:flex; gap:10px;">
-                            <button class="jec-btn-primary jec-btn-sm" onclick="openApply(${j.id})">Apply</button>
+                            ${j.has_applied
+                                ? `<button class="jec-btn-primary jec-btn-sm" disabled><i class="fas fa-check"></i> Applied</button>`
+                                : `<button class="jec-btn-primary jec-btn-sm" onclick="openApply(${j.id})">Apply</button>`}
                             ${(j.posted_by===user.id||user.role==='admin')?`<button class="ln-btn-ghost" onclick="delJob(${j.id})"><i class="fas fa-trash"></i></button>`:''}
                         </div>
                     </div>
@@ -239,7 +241,13 @@
                     body:fd
                 });
                 const d = await r.json();
-                if(r.ok){toast(d.message || 'Application successful','success');closeApply();}
+                if(r.ok){
+                    const appliedJobId = Number(document.getElementById('applyJobId').value);
+                    currentJobs = currentJobs.map(j => j.id === appliedJobId ? {...j, has_applied:true, application_count:(j.application_count || 0) + 1} : j);
+                    toast(d.message || 'Application successful','success');
+                    closeApply();
+                    renderJobs(currentJobs);
+                }
                 else { toast(d.detail || 'Application error.','error'); }
             } catch(e) {
                 toast('Application service unavailable.','error');

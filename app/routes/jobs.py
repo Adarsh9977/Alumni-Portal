@@ -169,7 +169,7 @@ def get_job_recs(
                 } for j in jobs
             ]
 
-        serialized = _serialize_jobs(db, jobs[:5])
+        serialized = _serialize_jobs(db, jobs[:5], current_user.id)
         for item in serialized:
             item["match_score"] = 85
             item["reason"] = "AI Recommended (Beta)"

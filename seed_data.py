@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app.database import SessionLocal, engine, Base
-from app.models import User, Job, Event, Post, Comment, Like, Application
+from app.models import User, Job, Event, Post, Comment, Like, Application, Connection, EventParticipant, Message
 from app.auth import get_password_hash
 
 # Create tables
@@ -13,12 +13,19 @@ Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
 
-existing_users = db.query(User).count()
-if existing_users:
-    print(f"✅ Seed skipped: database already has {existing_users} users.")
-    print("Build can continue without resetting existing data.")
-    db.close()
-    sys.exit(0)
+# Clear existing data
+print("Clearing existing data...")
+db.query(Message).delete()
+db.query(EventParticipant).delete()
+db.query(Connection).delete()
+db.query(Like).delete()
+db.query(Comment).delete()
+db.query(Application).delete()
+db.query(Post).delete()
+db.query(Job).delete()
+db.query(Event).delete()
+db.query(User).delete()
+db.commit()
 
 # ===== USERS =====
 print("👤 Creating users...")
