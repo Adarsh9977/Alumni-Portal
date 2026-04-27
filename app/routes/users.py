@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import Optional, List
 import os
 import shutil
@@ -10,6 +11,7 @@ from ..database import get_db
 from ..models import User, Connection
 from ..schemas import UserUpdate, UserResponse
 from ..dependencies import get_current_user, require_admin
+from ..cache import get_or_set, invalidate_namespaces, make_cache_key
 # from ..utils.ai_logic import extract_text_from_pdf, calculate_ats_score
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
@@ -48,6 +50,7 @@ def update_my_profile(
     
     db.commit()
     db.refresh(current_user)
+    invalidate_namespaces("users", "posts", "jobs", "events", "messages")
     
     return {
         "message": "Profile updated successfully",
@@ -95,6 +98,7 @@ async def upload_profile_picture(
     img_url = f"/static/profile_pics/{filename}"
     current_user.profile_picture = img_url
     db.commit()
+    invalidate_namespaces("users", "posts", "messages")
     return {"message": "Profile picture updated", "profile_picture": img_url}
 
 
@@ -106,6 +110,7 @@ def remove_profile_picture(
     """Remove the current user's profile picture."""
     current_user.profile_picture = None
     db.commit()
+    invalidate_namespaces("users", "posts", "messages")
     return {"message": "Profile picture removed"}
 
 
@@ -157,6 +162,7 @@ async def upload_resume(
     
     db.commit()
     db.refresh(current_user)
+    invalidate_namespaces("users", "jobs")
     
     return {
         "message": "Resume uploaded successfully (AI Analysis Offline)",
@@ -192,42 +198,49 @@ def get_alumni_directory(
             (User.name.ilike(f"%{search}%")) | (User.skills.ilike(f"%{search}%"))
         )
     
-    alumni = query.all()
-    
-    # Get current user's connections to determine status
-    results = []
-    for a in alumni:
-        # Check if there's any connection record
-        conn = db.query(Connection).filter(
-            ((Connection.sender_id == current_user.id) & (Connection.receiver_id == a.id)) |
-            ((Connection.sender_id == a.id) & (Connection.receiver_id == current_user.id))
-        ).first()
-        
-        status = "none"
-        is_sender = False
-        conn_id = None
-        
-        if conn:
-            status = conn.status
-            is_sender = (conn.sender_id == current_user.id)
-            conn_id = conn.id
-            
-        results.append({
-            "id": a.id,
-            "name": a.name,
-            "email": a.email,
-            "batch": a.batch,
-            "branch": a.branch,
-            "company": a.company,
-            "skills": a.skills,
-            "bio": a.bio,
-            "profile_picture": a.profile_picture,
-            "connection_status": status,
-            "is_connection_sender": is_sender,
-            "connection_id": conn_id
-        })
-    
-    return results
+    cache_key = make_cache_key(
+        "users", "directory", current_user.id,
+        batch=batch or "",
+        company=company or "",
+        branch=branch or "",
+        search=search or ""
+    )
+
+    def load_directory():
+        alumni = query.all()
+        alumni_ids = [a.id for a in alumni]
+        connections = db.query(Connection).filter(
+            or_(
+                (Connection.sender_id == current_user.id) & (Connection.receiver_id.in_(alumni_ids)),
+                (Connection.sender_id.in_(alumni_ids)) & (Connection.receiver_id == current_user.id)
+            )
+        ).all() if alumni_ids else []
+
+        connection_by_user = {}
+        for conn in connections:
+            other_id = conn.receiver_id if conn.sender_id == current_user.id else conn.sender_id
+            connection_by_user[other_id] = conn
+
+        results = []
+        for a in alumni:
+            conn = connection_by_user.get(a.id)
+            results.append({
+                "id": a.id,
+                "name": a.name,
+                "email": a.email,
+                "batch": a.batch,
+                "branch": a.branch,
+                "company": a.company,
+                "skills": a.skills,
+                "bio": a.bio,
+                "profile_picture": a.profile_picture,
+                "connection_status": conn.status if conn else "none",
+                "is_connection_sender": conn.sender_id == current_user.id if conn else False,
+                "connection_id": conn.id if conn else None
+            })
+        return results
+
+    return get_or_set(cache_key, load_directory)
 
 
 @router.get("/all", response_model=List[dict])
@@ -236,21 +249,24 @@ def get_all_users(
     db: Session = Depends(get_db)
 ):
     """Get all users - Admin only endpoint."""
-    users = db.query(User).all()
-    return [
-        {
-            "id": u.id,
-            "name": u.name,
-            "email": u.email,
-            "role": u.role,
-            "batch": u.batch,
-            "branch": u.branch,
-            "company": u.company,
-            "is_active": u.is_active,
-            "created_at": str(u.created_at) if u.created_at else None
-        }
-        for u in users
-    ]
+    cache_key = make_cache_key("users", "all")
+    return get_or_set(
+        cache_key,
+        lambda: [
+            {
+                "id": u.id,
+                "name": u.name,
+                "email": u.email,
+                "role": u.role,
+                "batch": u.batch,
+                "branch": u.branch,
+                "company": u.company,
+                "is_active": u.is_active,
+                "created_at": str(u.created_at) if u.created_at else None
+            }
+            for u in db.query(User).all()
+        ]
+    )
 
 
 @router.delete("/{user_id}", response_model=dict)
@@ -275,6 +291,7 @@ def delete_user(
     
     db.delete(user)
     db.commit()
+    invalidate_namespaces("users", "posts", "jobs", "events", "messages")
     
     return {"message": f"User '{user.name}' deleted successfully"}
 
@@ -301,6 +318,7 @@ def toggle_user_active(
     
     user.is_active = not user.is_active
     db.commit()
+    invalidate_namespaces("users", "posts", "jobs", "events", "messages")
     
     status_text = "activated" if user.is_active else "deactivated"
     return {"message": f"User '{user.name}' {status_text} successfully"}

@@ -8,6 +8,7 @@ from ..database import get_db
 from ..models import User, Connection
 from ..schemas import ConnectionCreate, ConnectionUpdate, ConnectionResponse
 from ..dependencies import get_current_user
+from ..cache import get_or_set, invalidate_namespaces, make_cache_key
 
 router = APIRouter(prefix="/api/connections", tags=["connections"])
 
@@ -40,6 +41,7 @@ def send_connection_request(
     db.add(new_connection)
     db.commit()
     db.refresh(new_connection)
+    invalidate_namespaces("users", "connections", "messages")
 
     # Attach names for response
     new_connection.sender_name = current_user.name
@@ -53,15 +55,30 @@ def get_pending_requests(
     current_user: User = Depends(get_current_user)
 ):
     """Get all pending connection requests for the current user."""
-    requests = db.query(Connection).filter(
-        Connection.receiver_id == current_user.id,
-        Connection.status == "pending"
-    ).all()
+    cache_key = make_cache_key("connections", "pending", current_user.id)
 
-    for r in requests:
-        r.sender_name = db.query(User.name).filter(User.id == r.sender_id).scalar()
-        r.receiver_name = current_user.name
-    return requests
+    def load_pending():
+        requests = db.query(Connection).filter(
+            Connection.receiver_id == current_user.id,
+            Connection.status == "pending"
+        ).all()
+        sender_ids = [request.sender_id for request in requests]
+        senders = db.query(User).filter(User.id.in_(sender_ids)).all() if sender_ids else []
+        senders_by_id = {sender.id: sender for sender in senders}
+        return [
+            {
+                "id": r.id,
+                "sender_id": r.sender_id,
+                "receiver_id": r.receiver_id,
+                "status": r.status,
+                "created_at": r.created_at,
+                "sender_name": senders_by_id[r.sender_id].name if r.sender_id in senders_by_id else None,
+                "receiver_name": current_user.name
+            }
+            for r in requests
+        ]
+
+    return get_or_set(cache_key, load_pending)
 
 
 @router.put("/{connection_id}/status", response_model=ConnectionResponse)
@@ -86,6 +103,7 @@ def update_connection_status(
     conn.status = update.status
     db.commit()
     db.refresh(conn)
+    invalidate_namespaces("users", "connections", "messages")
 
     # Attach names for response
     conn.sender_name = db.query(User.name).filter(User.id == conn.sender_id).scalar()
@@ -99,15 +117,30 @@ def get_my_connections(
     current_user: User = Depends(get_current_user)
 ):
     """Get all accepted connections for the current user."""
-    connections = db.query(Connection).filter(
-        ((Connection.sender_id == current_user.id) | (Connection.receiver_id == current_user.id)),
-        Connection.status == "accepted"
-    ).all()
+    cache_key = make_cache_key("connections", "my", current_user.id)
 
-    for c in connections:
-        c.sender_name = db.query(User.name).filter(User.id == c.sender_id).scalar()
-        c.receiver_name = db.query(User.name).filter(User.id == c.receiver_id).scalar()
-    return connections
+    def load_connections():
+        connections = db.query(Connection).filter(
+            ((Connection.sender_id == current_user.id) | (Connection.receiver_id == current_user.id)),
+            Connection.status == "accepted"
+        ).all()
+        user_ids = {c.sender_id for c in connections} | {c.receiver_id for c in connections}
+        users = db.query(User).filter(User.id.in_(user_ids)).all() if user_ids else []
+        users_by_id = {user.id: user for user in users}
+        return [
+            {
+                "id": c.id,
+                "sender_id": c.sender_id,
+                "receiver_id": c.receiver_id,
+                "status": c.status,
+                "created_at": c.created_at,
+                "sender_name": users_by_id[c.sender_id].name if c.sender_id in users_by_id else None,
+                "receiver_name": users_by_id[c.receiver_id].name if c.receiver_id in users_by_id else None
+            }
+            for c in connections
+        ]
+
+    return get_or_set(cache_key, load_connections)
 
 
 @router.get("/count", response_model=dict)
@@ -116,11 +149,16 @@ def get_connection_count(
     current_user: User = Depends(get_current_user)
 ):
     """Get the total number of accepted connections for the current user."""
-    count = db.query(Connection).filter(
-        ((Connection.sender_id == current_user.id) | (Connection.receiver_id == current_user.id)),
-        Connection.status == "accepted"
-    ).count()
-    return {"count": count}
+    cache_key = make_cache_key("connections", "count", current_user.id)
+    return get_or_set(
+        cache_key,
+        lambda: {
+            "count": db.query(Connection).filter(
+                ((Connection.sender_id == current_user.id) | (Connection.receiver_id == current_user.id)),
+                Connection.status == "accepted"
+            ).count()
+        }
+    )
 
 
 @router.get("/status/{other_user_id}")
@@ -130,16 +168,19 @@ def get_connection_status(
     current_user: User = Depends(get_current_user)
 ):
     """Get the connection status between current user and another user."""
-    conn = db.query(Connection).filter(
-        ((Connection.sender_id == current_user.id) & (Connection.receiver_id == other_user_id)) |
-        ((Connection.sender_id == other_user_id) & (Connection.receiver_id == current_user.id))
-    ).first()
+    cache_key = make_cache_key("connections", "status", current_user.id, other_user_id)
 
-    if not conn:
-        return {"status": "none"}
-    
-    return {
-        "status": conn.status,
-        "is_sender": conn.sender_id == current_user.id,
-        "connection_id": conn.id
-    }
+    def load_status():
+        conn = db.query(Connection).filter(
+            ((Connection.sender_id == current_user.id) & (Connection.receiver_id == other_user_id)) |
+            ((Connection.sender_id == other_user_id) & (Connection.receiver_id == current_user.id))
+        ).first()
+        if not conn:
+            return {"status": "none"}
+        return {
+            "status": conn.status,
+            "is_sender": conn.sender_id == current_user.id,
+            "connection_id": conn.id
+        }
+
+    return get_or_set(cache_key, load_status)

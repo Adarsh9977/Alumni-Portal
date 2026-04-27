@@ -2,14 +2,53 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 
 from ..database import get_db
 from ..models import User, Event, EventParticipant
 from ..schemas import EventCreate, EventResponse
 from ..dependencies import get_current_user, require_alumni_or_admin
+from ..cache import get_or_set, invalidate_namespace, make_cache_key
 
 router = APIRouter(prefix="/api/events", tags=["Events"])
+
+
+def _serialize_events(db: Session, events: list[Event], current_user_id: int) -> list[dict]:
+    event_ids = [event.id for event in events]
+    organizer_ids = {event.organized_by for event in events}
+    organizers = db.query(User).filter(User.id.in_(organizer_ids)).all() if organizer_ids else []
+    organizers_by_id = {organizer.id: organizer for organizer in organizers}
+    participant_counts = dict(
+        db.query(EventParticipant.event_id, func.count(EventParticipant.id)).filter(
+            EventParticipant.event_id.in_(event_ids)
+        ).group_by(EventParticipant.event_id).all()
+    ) if event_ids else {}
+    registered_event_ids = {
+        event_id for (event_id,) in db.query(EventParticipant.event_id).filter(
+            EventParticipant.event_id.in_(event_ids),
+            EventParticipant.user_id == current_user_id
+        ).all()
+    } if event_ids else set()
+
+    return [
+        {
+            "id": event.id,
+            "title": event.title,
+            "description": event.description,
+            "date": event.date,
+            "time": event.time,
+            "location": event.location,
+            "event_type": event.event_type,
+            "organized_by": event.organized_by,
+            "organizer_name": organizers_by_id[event.organized_by].name if event.organized_by in organizers_by_id else "Unknown",
+            "is_active": event.is_active,
+            "participant_count": participant_counts.get(event.id, 0),
+            "is_registered": event.id in registered_event_ids,
+            "created_at": str(event.created_at) if event.created_at else None
+        }
+        for event in events
+    ]
 
 
 @router.post("/", response_model=dict)
@@ -32,6 +71,7 @@ def create_event(
     db.add(new_event)
     db.commit()
     db.refresh(new_event)
+    invalidate_namespace("events")
     
     return {
         "message": "Event created successfully",
@@ -49,33 +89,15 @@ def get_all_events(
     db: Session = Depends(get_db)
 ):
     """Get all active events, ordered by date."""
-    events = db.query(Event).filter(Event.is_active == True).order_by(Event.date.desc()).all()
-    
-    result = []
-    for event in events:
-        organizer = db.query(User).filter(User.id == event.organized_by).first()
-        participant_count = db.query(EventParticipant).filter(EventParticipant.event_id == event.id).count()
-        is_registered = db.query(EventParticipant).filter(
-            EventParticipant.event_id == event.id, EventParticipant.user_id == current_user.id
-        ).first() is not None
-        
-        result.append({
-            "id": event.id,
-            "title": event.title,
-            "description": event.description,
-            "date": event.date,
-            "time": event.time,
-            "location": event.location,
-            "event_type": event.event_type,
-            "organized_by": event.organized_by,
-            "organizer_name": organizer.name if organizer else "Unknown",
-            "is_active": event.is_active,
-            "participant_count": participant_count,
-            "is_registered": is_registered,
-            "created_at": str(event.created_at) if event.created_at else None
-        })
-    
-    return result
+    cache_key = make_cache_key("events", "all", current_user.id)
+    return get_or_set(
+        cache_key,
+        lambda: _serialize_events(
+            db,
+            db.query(Event).filter(Event.is_active == True).order_by(Event.date.desc()).all(),
+            current_user.id
+        )
+    )
 
 
 @router.get("/{event_id}", response_model=dict)
@@ -85,47 +107,34 @@ def get_event(
     db: Session = Depends(get_db)
 ):
     """Get a specific event by ID with participants."""
-    event = db.query(Event).filter(Event.id == event_id).first()
-    if not event:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Event not found"
-        )
-    
-    organizer = db.query(User).filter(User.id == event.organized_by).first()
-    is_registered = db.query(EventParticipant).filter(
-        EventParticipant.event_id == event.id, EventParticipant.user_id == current_user.id
-    ).first() is not None
-    
-    participants = db.query(EventParticipant).filter(EventParticipant.event_id == event.id).all()
-    participant_list = []
-    for p in participants:
-        u = db.query(User).filter(User.id == p.user_id).first()
-        if u:
-            participant_list.append({
-                "id": u.id,
-                "name": u.name,
-                "role": u.role,
-                "company": u.company,
-                "batch": u.batch
-            })
-    
-    return {
-        "id": event.id,
-        "title": event.title,
-        "description": event.description,
-        "date": event.date,
-        "time": event.time,
-        "location": event.location,
-        "event_type": event.event_type,
-        "organized_by": event.organized_by,
-        "organizer_name": organizer.name if organizer else "Unknown",
-        "is_registered": is_registered,
-        "participant_count": len(participant_list),
-        "participants": participant_list,
-        "is_active": event.is_active,
-        "created_at": str(event.created_at) if event.created_at else None
-    }
+    cache_key = make_cache_key("events", "one", event_id, current_user.id)
+
+    def load_event():
+        event = db.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Event not found"
+            )
+
+        event_data = _serialize_events(db, [event], current_user.id)[0]
+        participants = db.query(EventParticipant).filter(EventParticipant.event_id == event.id).all()
+        user_ids = [participant.user_id for participant in participants]
+        users = db.query(User).filter(User.id.in_(user_ids)).all() if user_ids else []
+        event_data["participants"] = [
+            {
+                "id": user.id,
+                "name": user.name,
+                "role": user.role,
+                "company": user.company,
+                "batch": user.batch
+            }
+            for user in users
+        ]
+        event_data["participant_count"] = len(event_data["participants"])
+        return event_data
+
+    return get_or_set(cache_key, load_event)
 
 
 @router.post("/{event_id}/rsvp", response_model=dict)
@@ -147,11 +156,13 @@ def rsvp_event(
     if existing:
         db.delete(existing)
         db.commit()
+        invalidate_namespace("events")
         return {"message": "unregistered", "is_registered": False}
     else:
         new_p = EventParticipant(event_id=event_id, user_id=current_user.id)
         db.add(new_p)
         db.commit()
+        invalidate_namespace("events")
         return {"message": "registered", "is_registered": True}
 
 
@@ -185,6 +196,7 @@ def update_event(
     
     db.commit()
     db.refresh(event)
+    invalidate_namespace("events")
     
     return {"message": "Event updated successfully"}
 
@@ -211,5 +223,6 @@ def delete_event(
     
     db.delete(event)
     db.commit()
+    invalidate_namespace("events")
     
     return {"message": "Event deleted successfully"}
