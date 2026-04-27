@@ -17,6 +17,14 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     Register a new user.
     Validates email uniqueness, hashes password, and creates a new user record.
     """
+    print("REGISTER API HIT")
+    print("Register payload:", {
+        "name": user_data.name,
+        "email": user_data.email,
+        "role": user_data.role,
+        "password_provided": bool(user_data.password),
+    })
+
     # Check if email already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
@@ -68,6 +76,12 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
     Authenticate user and return JWT token.
     Validates credentials and generates an access token.
     """
+    print("LOGIN API HIT")
+    print("Login payload:", {
+        "email": user_data.email,
+        "password_provided": bool(user_data.password),
+    })
+
     # Find user by email
     user = db.query(User).filter(User.email == user_data.email).first()
     if not user:

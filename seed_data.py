@@ -219,8 +219,6 @@ applications = [
 db.add_all(applications)
 db.commit()
 
-db.close()
-
 print("\n" + "="*50)
 print("✅ SEED DATA LOADED SUCCESSFULLY!")
 print("="*50)
@@ -245,3 +243,5 @@ print("-"*50)
 print(f"\n📊 Created: {len(users)} users, {len(jobs)} jobs, {len(events)} events,")
 print(f"   {len(posts)} posts, {len(comments)} comments, {len(likes)} likes, {len(applications)} applications")
 print(f"\n🌐 Open http://localhost:8000 in your browser")
+
+db.close()

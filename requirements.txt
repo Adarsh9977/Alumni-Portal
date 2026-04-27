@@ -8,3 +8,4 @@ email-validator
 aiofiles
 psycopg2-binary
 pypdf
+python-dotenv
